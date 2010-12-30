@@ -4,7 +4,7 @@ Donate link: http://structureweb.co/donate/
 Tags: automation, expire, expires, expiring, notification, notify, schedule, scheduling, sticky
 Requires at least: 2.9
 Tested up to: 3.0.4
-Stable tag: trunk
+Stable tag: 0.9.1
 
 Schedule Posts and Pages to automatically expire and change at a certain time, and provide notification of expiration.
 
