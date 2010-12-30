@@ -30,6 +30,10 @@ Content Scheduler can also notify you:
 
 This reminder helps you keep content fresh, providing a reminder that content is out of date and needs updated or replaced. Content Scheduler lets you use notification tools without making any changes to content upon expiration, if you'd like.
 
+= More Information =
+
+See the developer's site, [Structure Web Development:](http://structureweb.co)
+
 == Installation ==
 
 To install Content Scheduler:
