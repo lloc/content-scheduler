@@ -3,7 +3,7 @@
 Plugin Name: Content Scheduler
 Plugin URI: http://structureweb.co/wordpress-plugins/content-scheduler/
 Description: Set Posts and Pages to automatically expire. Upon expiration, delete, change categories, status, or unstick posts. Also notify admin and author of expiration.
-Version: 0.9.2
+Version: 0.9.3
 Author: Paul Kaiser
 Author URI: http://structureweb.co
 License: GPL2
@@ -315,6 +315,28 @@ if ( !class_exists( "ContentScheduler" ) )
 			} // end foreach
 		} // end draw_notify_author_fn
 		
+		// Set minimum level to see Content Scheduler fields and shortcodes
+		// http://codex.wordpress.org/Roles_and_Capabilities#Roles
+		function draw_min_level_fn()
+		{
+			$options = get_option('ContentScheduler_Options');
+			$items = array(
+							array("super admin", 10),
+							array("administrator", 8),
+							array("editor", 5),
+							array("author", 2),
+							array("contributor", 1),
+							array("subscriber", 0)
+							);
+			echo "<select id='min-level' name='ContentScheduler_Options[min-level]'>\n";
+			foreach( $items as $item )
+			{
+				$checked = ($options['min-level'] == $item[1] ) ? ' selected="selected" ' : ' ';
+				echo "<option".$checked." value='$item[1]'> $item[0]</option>\n";
+			}
+			echo "</select>\n";
+		} // end draw_min_level_fn()
+		
 		// Notify upon expiration?
 		function draw_notify_expire_fn()
 		{
@@ -551,34 +573,56 @@ if ( !class_exists( "ContentScheduler" ) )
 			// 3. Check to see if the system meets plugin requirements (WP version, PHP version, etc.)
 			// Let's see about setting some default options
 			$options = get_option('ContentScheduler_Options');
+			// Build an array of each option and its default setting
+			$arr_defaults = array
+			(
+			    "version" => "0.9.3",
+				"exp-status" => "Apply changes",
+			    "exp-period" => "1",
+			    "chg-status" => "Draft",
+			    "chg-sticky" => "No Change",
+			    "chg-cat-method" => "No Change",
+			    "selcats" => "",
+			    "tags-to-add" => "",
+			    "notify-on" => "Notification off",
+			    "notify-admin" => "Do not notify Admin",
+			    "notify-author" => "Do not notify Author",
+			    "notify-expire" => "Do not notify on expiration",
+			    "notify-before" => "0",
+			    "min-level" => "editor",
+			    "time-to-add" => "0",
+			    "extend-which" => "",
+			    "show-columns" => "Do not show expiration in columns",
+			    "datepicker" => "Do not use datepicker",
+			    "remove-cs-data" => "Do not remove data"
+			);
 			
 			// check to see if we need to set defaults
 			// first condition is that the 'restore defaults' checkbox is on
 			// OR condition is that defaults haven't even been set
 			if( ($options['restore']=='on') || (!is_array( $options ) ) )
 			{
-				// Build an array of each option and its default setting
-				$arr = array
-				(
-				    "version" => "0.9.2",
-					"exp-status" => "Apply changes",
-				    "exp-period" => "1",
-				    "chg-status" => "Draft",
-				    "chg-sticky" => "No Change",
-				    "chg-cat-method" => "No Change",
-				    "selcats" => "",
-				    "tags-to-add" => "",
-				    "notify-on" => "Notification off",
-				    "notify-admin" => "Do not notify Admin",
-				    "notify-author" => "Do not notify Author",
-				    "notify-expire" => "Do not notify on expiration",
-				    "notify-before" => "0",
-				    "show-columns" => "Do not show expiration in columns",
-				    "datepicker" => "Do not use datepicker",
-				    "remove-cs-data" => "Do not remove data"
-				);
-				update_option('ContentScheduler_Options', $arr);
+				update_option('ContentScheduler_Options', $arr_defaults);
 			}
+			else
+			{
+				// we found some ContentScheduler_Options in the database,
+				// but we want to make sure we have added any updated options
+				// The following will help make sure NEW options get added (from an updated version of Content Scheduler)
+				// This starts with our defaults, then superimposes our currenly-saved options over the top
+				if (!function_exists('array_replace'))
+				{
+					// we're before php 5.3.0, and need to use our array_replace
+					$new_options = $this->array_replace( $arr_defaults, $options );
+				}
+				else
+				{
+					// go ahead and use php 5.3.0 array_replace
+					$new_options = array_replace( $arr_defaults, $options );
+				}
+				update_option('ContentScheduler_Options', $new_options);
+			}
+
 			// We need to get our expiration event into the wp-cron schedules somehow
 			if( $current_blog_id != '' )
 			{
@@ -724,8 +768,24 @@ if ( !class_exists( "ContentScheduler" ) )
 		// This is the function called by the action hook
 		// 3/21/2011 12:36:13 PM -pk
 		// Should now add to custom post types, as well
+		// 3/25/2011 11:41:48 AM -pk
+		// We'll rig so it only shows if user is min-level or above
 		function ContentScheduler_add_custom_box_fn()
 		{
+			global $current_user;
+		
+			// What is minimum level required to see CS?
+			$options = get_option('ContentScheduler_Options');
+			$min_level = $options['min-level'];
+			// What is current user's level?
+			get_currentuserinfo();
+			$user_level = $current_user->data->user_level;
+			if( $user_level < $min_level )
+			{
+				return; // not authorized to see CS
+			}
+			// else - continue
+			
 			// Add the box to Post write panels
 		    add_meta_box( 'ContentScheduler_sectionid', 
 							__( 'Content Scheduler', 
@@ -1069,7 +1129,23 @@ if ( !class_exists( "ContentScheduler" ) )
 function handle_shortcode( $attributes )
 {
 	global $post;
+	global $current_user;
+
+	// Check to see if we have rights to see stuff
+	$options = get_option('ContentScheduler_Options');
+	$min_level = $options['min-level'];
 	
+	get_currentuserinfo();
+	
+	$user_level = $current_user->data->user_level;
+	
+	if( $user_level < $min_level )
+	{
+		// we're NOT okay to proceed
+		return "";
+	}
+	// else we can proceed
+
 	// get the expiration timestamp
     $expirationdt = get_post_meta( $post->ID, 'cs-expire-date', true );
 	if ( empty( $expirationdt ) )
@@ -1096,6 +1172,32 @@ function handle_shortcode( $attributes )
 // =======================================================================
 // == GENERAL UTILITY FUNCTIONS
 // =======================================================================
+// 3/28/2011 12:21:31 AM -pk
+// Added for pre 5.3 php compatibility
+// NOTE there is a function of the same name in php 5.3.0+, but this one is within our Class
+function array_replace( array &$array, array &$array1 )
+{
+  $args = func_get_args();
+  $count = func_num_args();
+
+  for ($i = 0; $i < $count; ++$i) {
+    if (is_array($args[$i])) {
+      foreach ($args[$i] as $key => $val) {
+        $array[$key] = $val;
+      }
+    }
+    else {
+      trigger_error(
+        __FUNCTION__ . '(): Argument #' . ($i+1) . ' is not an array',
+        E_USER_WARNING
+      );
+      return NULL;
+    }
+  }
+
+  return $array;
+}
+
 		// 11/17/2010 3:06:27 PM -pk
 		// NOTE: We could add another parameter, '$format,' to support different date formats
 		function check_date_format($date)

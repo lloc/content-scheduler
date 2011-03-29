@@ -9,13 +9,13 @@ Donate link: http://structureweb.co/donate/
 Requires at least: 2.9
 Tested up to: 3.1
 Stable tag: trunk
-Version: 0.9.2
+Version: 0.9.3
 
 Schedule Content to automatically expire and change at a certain time, and provide notification of expiration.
 
 == Description ==
 
-Content Scheduler lets you schedule Content to automatically expire at a certain time.
+Content Scheduler lets you control when Content automatically expires, what to do with that content when it expires, and optionally how to provide notification to site contributors that the content expired.
 
 = Expiration Options =
 
@@ -78,6 +78,9 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 
 == Changelog ==
 
+= 0.9.3 =
+* Added ability to select minimum user level that can see Content Scheduler fields and shortcodes.
+
 = 0.9.2 =
 * Added support for Custom Post Types.
 * Added ability to add Tag(s) to expired items.
@@ -90,6 +93,9 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 * First public release.
 
 == Upgrade Notice ==
+
+= 0.9.3 =
+* Added ability to select minimum user level that can see Content Scheduler fields and shortcodes.
 
 = 0.9.2 =
 * Added support for Custom Post Types.

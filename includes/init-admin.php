@@ -182,6 +182,16 @@
 				'ContentScheduler_Not_ID');
 			
 			/*
+			Select Menu: 'min-level': For minimum user role that can see Content Scheduler forms and shortcode output.
+			*/
+			add_settings_field(
+				'min-level',
+				'Minimum User Role to See Content Scheduler fields and shortcodes:',
+				array($this, 'draw_min_level_fn'),
+				'ContentScheduler_Page_Title',
+				'ContentScheduler_Disp_ID');
+			
+			/*
 			== Columns option ==
 			Checkbox: Show expiration date in column views: 'exp-show-column'
 			* This determines whether or not an expiration date column is shown when viewing a list of Posts or Pages.
