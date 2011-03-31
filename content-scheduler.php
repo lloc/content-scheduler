@@ -329,9 +329,10 @@ if ( !class_exists( "ContentScheduler" ) )
 							array("subscriber", 0)
 							);
 			echo "<select id='min-level' name='ContentScheduler_Options[min-level]'>\n";
+
 			foreach( $items as $item )
 			{
-				$checked = ($options['min-level'] == $item[1] ) ? ' selected="selected" ' : ' ';
+				$checked = ($options['min-level'] == $item[0] ) ? ' selected="selected" ' : ' ';
 				echo "<option".$checked." value='$item[1]'> $item[0]</option>\n";
 			}
 			echo "</select>\n";
