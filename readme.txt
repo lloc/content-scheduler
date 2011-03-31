@@ -9,7 +9,7 @@ Donate link: http://structureweb.co/donate/
 Requires at least: 2.9
 Tested up to: 3.1
 Stable tag: trunk
-Version: 0.9.3
+Version: 0.9.4
 
 Schedule Content to automatically expire and change at a certain time, and provide notification of expiration.
 
@@ -69,6 +69,7 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 1. Make sure you have actually visited a page on your website after the post's expected expiration date. WordPress only fires off scheduled tasks when people actually visit the site. Continuing to refresh in the backend only to see if things have changed will not work.
 1. Check your WordPress installation Timezone, and use one of the timezone strings. That is, when set to "UTC -6," our testing team found WordPress was going to wait several hours before beginning to check schedules. However, setting timezone to "America/Chicago" (the same timezone) fixed the problem. We're still checking on the reason for this.
 1. Try simply deactivating the plugin and reactivating it, then testing again.
+1. Other plugins that schedule events might handle scheduling incorrectly, thereby removing Content Scheduler's expiration period. Again, deactivating and reactivating Content Scheduler should re-instate the scheduling.
 
 == Screenshots ==
 
@@ -77,6 +78,9 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 3. Scheduling content expiration uses a small, unobtrusive box on your Post and Pages edit screens.
 
 == Changelog ==
+
+= 0.9.4 =
+* Ensured WordPress-configured timezone is honored upon plugin activation so expiration periods are not inadvertently delayed.
 
 = 0.9.3 =
 * Added ability to select minimum user level that can see Content Scheduler fields and shortcodes.
@@ -93,6 +97,9 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 * First public release.
 
 == Upgrade Notice ==
+
+= 0.9.4 =
+* Update to ensure WordPress-configured timezone is honored upon plugin activation so expiration periods are not inadvertently delayed.
 
 = 0.9.3 =
 * Added ability to select minimum user level that can see Content Scheduler fields and shortcodes.
