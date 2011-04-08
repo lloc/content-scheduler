@@ -17,21 +17,21 @@
 			// Expirations
 			add_settings_section(
 				'ContentScheduler_Options_ID',
-				'Content Scheduler Expiration Options',
+				__('Content Scheduler Expiration Options', 'contentscheduler'),
 				array($this, 'draw_overview'),
 				'ContentScheduler_Page_Title');
 			
 			// Notifications
 			add_settings_section(
 				'ContentScheduler_Not_ID',
-				'Content Scheduler Notification Options',
+				__('Content Scheduler Notification Options', 'contentscheduler'),
 				array($this, 'draw_overview_not'),
 				'ContentScheduler_Page_Title');
 			
 			// Display Options
 			add_settings_section(
 				'ContentScheduler_Disp_ID',
-				'Content Scheduler Display Options',
+				__('Content Scheduler Display Options', 'contentscheduler'),
 				array($this, 'draw_overview_disp'),
 				'ContentScheduler_Page_Title');
 			// ========================================
@@ -48,7 +48,7 @@
 			*/
 			add_settings_field(
 				'exp-status',
-				'Expiration status',
+				__('Expiration status', 'contentscheduler'),
 				array($this, 'draw_set_expstatus_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Options_ID');
@@ -60,7 +60,7 @@
 			*/
 			add_settings_field(
 				'exp-period',
-				'Expiration frequency (in minutes)',
+				__('Expiration frequency (in minutes)', 'contentscheduler'),
 				array($this, 'draw_set_expperiod_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Options_ID');
@@ -78,7 +78,7 @@
 			*/
 			add_settings_field(
 				'chg-status',
-				'Change status to:',
+				__('Change status to:', 'contentscheduler'),
 				array($this, 'draw_set_chgstatus_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Options_ID');
@@ -89,7 +89,7 @@
 			*/
 			add_settings_field(
 				'chg-sticky',
-				'Change stickiness to:',
+				__('Change stickiness to:', 'contentscheduler'),
 				array($this, 'draw_set_chgsticky_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Options_ID');
@@ -103,7 +103,7 @@
 			*/
 			add_settings_field(
 				'chg-cat-method',
-				'Apply Category changes as:',
+				__('Apply Category changes as:', 'contentscheduler'),
 				array($this, 'draw_set_chgcatmethod_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Options_ID');
@@ -115,7 +115,7 @@
 			*/
 			add_settings_field(
 				'selcats',
-				'Selected Categories:',
+				__('Selected Categories:', 'contentscheduler'),
 				array($this, 'draw_set_categories_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Options_ID');
@@ -125,7 +125,7 @@
 			// Must check to see if the content supports post_tags first
 			add_settings_field(
 				'tags-to-add',
-				'Add the following tag(s):',
+				__('Add the following tag(s):', 'contentscheduler'),
 				array($this, 'draw_add_tags_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Options_ID');
@@ -135,7 +135,7 @@
 			*/
 			add_settings_field(
 				'notify-on',
-				'Enable notification:',
+				__('Enable notification:', 'contentscheduler'),
 				array($this, 'draw_notify_on_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Not_ID');
@@ -146,7 +146,7 @@
 			*/
 			add_settings_field(
 				'notify-before',
-				'Notify before expiration:',
+				__('Notify before expiration:', 'contentscheduler'),
 				array($this, 'draw_notify_before_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Not_ID');
@@ -156,7 +156,7 @@
 			*/
 			add_settings_field(
 				'notify-expire',
-				'Notify upon expiration:',
+				__('Notify upon expiration:', 'contentscheduler'),
 				array($this, 'draw_notify_expire_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Not_ID');
@@ -166,7 +166,7 @@
 			*/
 			add_settings_field(
 				'notify-admin',
-				'Notify Site Administrator:',
+				__('Notify Site Administrator:', 'contentscheduler'),
 				array($this, 'draw_notify_admin_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Not_ID');
@@ -176,7 +176,7 @@
 			*/
 			add_settings_field(
 				'notify-author',
-				'Notify Content Author:',
+				__('Notify Content Author:', 'contentscheduler'),
 				array($this, 'draw_notify_author_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Not_ID');
@@ -186,7 +186,7 @@
 			*/
 			add_settings_field(
 				'min-level',
-				'Minimum User Role to See Content Scheduler fields and shortcodes:',
+				__('Minimum user role to see Content Scheduler fields and shortcodes:', 'contentscheduler'),
 				array($this, 'draw_min_level_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Disp_ID');
@@ -198,7 +198,7 @@
 			*/
 			add_settings_field(
 				'show-columns',
-				'Show expiration in columns:',
+				__('Show expiration in columns:', 'contentscheduler'),
 				array($this, 'draw_show_columns_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Disp_ID');
@@ -211,7 +211,7 @@
 			*/
 			add_settings_field(
 				'datepicker',
-				'Use datepicker for Date:',
+				__('Use datepicker for Date:', 'contentscheduler'),
 				array($this, 'draw_show_datepicker_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Disp_ID');
@@ -223,9 +223,17 @@
 			*/
 			add_settings_field(
 				'remove-cs-data',
-				'Remove all Content Scheduler data upon uninstall:',
+				__('Remove all Content Scheduler data upon uninstall:', 'contentscheduler'),
 				array($this, 'draw_remove_data_fn'),
 				'ContentScheduler_Page_Title',
 				'ContentScheduler_Disp_ID');
+			// Version
+			add_settings_field(
+				'version',
+				__('Plugin version:', 'contentscheduler'),
+				array($this, 'draw_plugin_version'),
+				'ContentScheduler_Page_Title',
+				'ContentScheduler_Disp_ID');
+				
 
 ?>

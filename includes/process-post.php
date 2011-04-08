@@ -8,16 +8,16 @@
   	        // STATUS AND VISIBILITY
   	        switch( $options['chg-status'] )
   	        {
-				case "No Change":
+				case '0':
 					// we do not need a post_status key
 					break;
-				case "Pending":
+				case '1':
 					$update_post['post_status'] = 'pending';
 					break;
-				case "Draft":
+				case '2':
 					$update_post['post_status'] = 'draft';
 					break;
-				case "Private":
+				case '3':
 					$update_post['post_status'] = 'private';
 					break;
 				// default:
@@ -29,7 +29,7 @@
 			// =============================================================
   	        // CATEGORIES
   	        // First, let's check and see if we want to do Category changing or not.
-  	        if( $options['chg-cat-method'] != 'No Change' )
+  	        if( $options['chg-cat-method'] != '0' )
   	        {
   	        	// We do want category changes, so let's procees
 				// list of categories we want to work with, as set in Content Scheduler > Options panel
@@ -45,18 +45,18 @@
 				
 				switch( $options['chg-cat-method'] )
 				{
-					case "Add selected":
+					case '1':
 						// we want to have the current categories
 						// PLUS the selected categories
 						$category_switch = array_merge( $current_category_ids, $category_switch );
 						$category_switch = array_unique( $category_switch );
 						break;
-					case "Remove selected":
+					case '2':
 						// we want to have the current categories
 						// MINUS the selected categories
 						$category_switch = array_diff( $current_category_ids, $category_switch );
 						break;
-					case "Match selected":
+					case '3':
 						// we want the categories to MATCH the selected categories
 						// $category_switch is already set just fine
 						break;
@@ -75,9 +75,6 @@
 			$post_type = get_post_type( $postid );
 			if( ! empty( $post_type ) )
 			{
-				// for debug
-				_log("Post Type: $post_type");
-				
 				// See if the post_type is built-in Post
 				if( $post_type == 'post' )
 				{
@@ -88,16 +85,8 @@
 					// If it is not built-in Post, then we need to find out its taxonomies (does it support post_tag)
 					// Get the post type's capabilities
 					$post_type_object = get_post_type_object( $post_type );
-					// for debug
-					_log("=== post_type_object ===");
-					_log($post_type_object);
-					
 					// Get the array of supported taxonomies for this post_type
 					$supported_taxos = $post_type_object->taxonomies;
-					// for debug
-					_log("=== supported_taxos ===");
-					_log($supported_taxos);
-					
 					// Find out if post_tag is in $supported_taxos
 					if( in_array( 'post_tag', $supported_taxos ) )
 					{
@@ -106,29 +95,19 @@
 				} // end if for $post_type != post
 				
 				if( $proceed == true )
-				{
-					// for debug
-					_log("PROCEED is true");
-					
+				{					
 					// ===========================================================
 					// First, check to see if we even want to do tags
 					// $tags_to_add = $options['tags-to-add']; // this is a comma-delimited string
 					// turn $tags_to_add into an array
 					// $tags_to_add = explode( ", ", $tags_to_add );
-					$tags_to_add = explode( ", ", $options['tags-to-add'] );
-					// for debug
-					_log("=== tags_to_add ===");
-					_log($tags_to_add);
-					
+					$tags_to_add = explode( ", ", $options['tags-to-add'] );					
 					// make sure we just have a comma-separated list of alphanumeric entries
 					$tags_to_add = filter_var_array( $tags_to_add, FILTER_SANITIZE_STRING );
 					if( !empty( $tags_to_add ) )
 					{
 						// get the current tags list for this post
 						$cur_post_tags = get_the_tags( $postid ); // returns an array of objects
-						// for debug
-						_log("=== cur_post_tags ===");
-						_log($cur_post_tags);
 						
 						if( !empty( $cur_post_tags ) )
 						{
@@ -152,9 +131,6 @@
 						{
 							$final_tag_list = $tags_to_add;
 						}
-						// for debug
-						_log("=== final_tag_list ===");
-						_log($final_tag_list);
 						
 						// now I need all those tags comma delimited again (did we have to go into the array and back out of it to handle the duplicates?)
 						$final_tag_list = implode( ", ", $final_tag_list );
@@ -190,7 +166,7 @@
 			// get the array of sticky posts
 			// What do we want to do with stickiness?
 			$sticky_change = $options['chg-sticky'];
-			if( $sticky_change == 'Unstick' )
+			if( $sticky_change == '1' )
 			{
 				$sticky_posts = get_option('sticky_posts');
 				if( ! empty( $sticky_posts ) )

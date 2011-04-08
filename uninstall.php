@@ -12,10 +12,10 @@
 	// Some security precautions
 	// You have to be logged in to run this file (duh)
 	if ( !is_user_logged_in() )
-		wp_die( 'You must be logged in to run the uninstaller.' );
+		wp_die( __('You must be logged in to run the uninstaller.', 'contentscheduler') );
 	// You have to have permissions to mess with plugins to run this file (duh*2)
 	if ( !current_user_can( 'install_plugins' ) )
-		wp_die( 'You do not have permission to run the uninstaller.' );
+		wp_die( __('You do not have permission to run the uninstaller.', 'contentscheduler') );
 	// Another check to make sure we're all legit here
 	if ( defined( 'UNINSTALL_CONTENTSCHEDULER' ) )
 		wp_die( 'UNINSTALL_CONTENTSCHEDULER is, oddly, set! It should only be set in this uninstaller.' );

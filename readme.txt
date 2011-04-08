@@ -7,9 +7,9 @@ Author URI: http://profiles.wordpress.org/users/freakingid/
 Author: Paul Kaiser (freakingid)
 Donate link: http://structureweb.co/donate/
 Requires at least: 2.9
-Tested up to: 3.1
+Tested up to: 3.1.1
 Stable tag: trunk
-Version: 0.9.4
+Version: 0.9.5
 
 Schedule Content to automatically expire and change at a certain time, and provide notification of expiration.
 
@@ -79,6 +79,10 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 
 == Changelog ==
 
+= 0.9.5 =
+* Added i18n support
+* Changed plugin option values that were english strings into numerical values
+
 = 0.9.4 =
 * Ensured WordPress-configured timezone is honored upon plugin activation so expiration periods are not inadvertently delayed.
 
@@ -97,6 +101,10 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 * First public release.
 
 == Upgrade Notice ==
+
+= 0.9.5 =
+* Added i18n support
+* Changed plugin option values that were english strings into numerical values
 
 = 0.9.4 =
 * Update to ensure WordPress-configured timezone is honored upon plugin activation so expiration periods are not inadvertently delayed.

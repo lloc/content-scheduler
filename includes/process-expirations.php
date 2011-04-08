@@ -33,7 +33,7 @@
 				// we do this in its own loop before deleting
 				// because do_notifications() needs to access the posts before they are deleted to get info for the notify message
 				// Maybe not necessary, though, since deleting just puts them in trash?
-				if( $options['notify-expire'] == "Notify on expiration" )
+				if( $options['notify-expire'] == '1' )
 				{
 					// build array of posts to send to do_notifications
 					$posts_to_notify_on = array();
@@ -46,7 +46,7 @@
 				} // end if for notification on expiration
 				
 				// Shortcut: If exp-status = "Delete" then let's just delete and get on with things.
-				if( $options['exp-status'] == "Delete" )
+				if( $options['exp-status'] == '2' )
 				{
 					// Delete all those posts
 					foreach ( $result as $cur_post )

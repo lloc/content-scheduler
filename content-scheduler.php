@@ -3,7 +3,7 @@
 Plugin Name: Content Scheduler
 Plugin URI: http://structureweb.co/wordpress-plugins/content-scheduler/
 Description: Set Posts and Pages to automatically expire. Upon expiration, delete, change categories, status, or unstick posts. Also notify admin and author of expiration.
-Version: 0.9.4
+Version: 0.9.5
 Author: Paul Kaiser
 Author URI: http://structureweb.co
 License: GPL2
@@ -63,6 +63,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			// =============================================================
 			// Actions
 			// =============================================================
+			add_action( 'init', array($this, 'content_scheduler_init') );
 			// Adding Admin inits
 			add_action('admin_init', array($this, 'init_admin'));
 			// Add any JavaScript and CSS needed just for my plugin
@@ -127,6 +128,11 @@ if ( !class_exists( "ContentScheduler" ) )
 			// form field drawing callback functions
 			include "includes/init-admin.php";
 		} // end init_admin()
+		function content_scheduler_init()
+		{
+			$plugin_dir = basename(dirname(__FILE__)) . '/lang';
+			load_plugin_textdomain( 'contentscheduler', null, $plugin_dir );
+		}
 
 
 
@@ -146,15 +152,15 @@ if ( !class_exists( "ContentScheduler" ) )
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
 			$items = array(
-							array("Hold", "Do nothing upon expiration."),
-							array("Delete", "Move to trash upon expiration."),
-							array("Apply changes", "Apply the changes below upon expiration.")
+							array('0', __("Hold", 'contentscheduler'), __("Do nothing upon expiration.", 'contentscheduler') ),
+							array('2', __("Delete", 'contentscheduler'), __("Move to trash upon expiration.", 'contentscheduler') ),
+							array('1', __("Apply changes", 'contentscheduler'), __("Apply the changes below upon expiration.", 'contentscheduler') )
 							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
 				$checked = ($options['exp-status'] == $item[0] ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[exp-status]' type='radio' /> $item[0] &mdash; $item[1]</label><br />";
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[exp-status]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // end draw_set_expstatus_fn()
 
@@ -166,7 +172,9 @@ if ( !class_exists( "ContentScheduler" ) )
 			// get this plugin's options from the database
 			// This should have a default value of '1'
 			$options = get_option('ContentScheduler_Options');
-			echo "Wait <input id='exp-period' name='ContentScheduler_Options[exp-period]' size='10' type='text' value='{$options['exp-period']}' /> minutes between expiration checks.<br />";
+			$input_field = "<input id='exp-period' name='ContentScheduler_Options[exp-period]' size='10' type='text' value='{$options['exp-period']}' />";
+			printf( __("Wait %s minutes between expiration checks."), $input_field);
+			echo "<br />\n";
 		} // end draw_set_expperiod_fn()
 
 		
@@ -178,16 +186,16 @@ if ( !class_exists( "ContentScheduler" ) )
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
 			$items = array(
-							array("No Change", "Do not change status."),
-							array("Pending", "Change status to Pending."),
-							array("Draft", "Change status to Draft."),
-							array("Private", "Change visibility to Private.")
+							array('0', __("No Change", 'contentscheduler'), __("Do not change status.", 'contentscheduler') ),
+							array('1', __("Pending", 'contentscheduler'), __("Change status to Pending.", 'contentscheduler') ),
+							array('2', __("Draft", 'contentscheduler'), __("Change status to Draft.", 'contentscheduler') ),
+							array('3', __("Private", 'contentscheduler'), __("Change visibility to Private.", 'contentscheduler') )
 							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
 				$checked = ($options['chg-status'] == $item[0] ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-status]' type='radio' /> $item[0] &mdash; $item[1]</label><br />";
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-status]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // end draw_set_chgstatus_fn()
 		
@@ -199,14 +207,14 @@ if ( !class_exists( "ContentScheduler" ) )
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
 			$items = array(
-							array("No Change", "Do not unstick posts."),
-							array("Unstick", "Unstick posts.")
+							array('0', __("No Change", 'contentscheduler'), __("Do not unstick posts.", 'contentscheduler')),
+							array('1', __("Unstick", 'contentscheduler'), __("Unstick posts.", 'contentscheduler'))
 							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
 				$checked = ($options['chg-sticky'] == $item[0] ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-sticky]' type='radio' /> $item[0] &mdash; $item[1]</label><br />";
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-sticky]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // end draw_set_chgsticky_fn()
 		
@@ -218,16 +226,16 @@ if ( !class_exists( "ContentScheduler" ) )
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
 			$items = array(
-							array("No Change", "Make no category changes."),
-							array("Add selected", "Add posts to selected categories."),
-							array("Remove selected", "Remove posts from selected categories."),
-							array("Match selected", "Make posts exist only in selected categories.")
+							array('0',  __("No Change", 'contentscheduler'),  __("Make no category changes.", 'contentscheduler')),
+							array('1',  __("Add selected", 'contentscheduler'),  __("Add posts to selected categories.", 'contentscheduler')),
+							array('2',  __("Remove selected", 'contentscheduler'),  __("Remove posts from selected categories.", 'contentscheduler')),
+							array('3',  __("Match selected", 'contentscheduler'),  __("Make posts exist only in selected categories.", 'contentscheduler'))
 							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
 				$checked = ($options['chg-cat-method'] == $item[0] ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-cat-method]' type='radio' /> $item[0] &mdash; $item[1]</label><br />";
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-cat-method]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // end draw_set_chgcatmethod_fn()
 		
@@ -263,7 +271,8 @@ if ( !class_exists( "ContentScheduler" ) )
 			// get this plugin's options from the database
 			// This should have a default value of '1'
 			$options = get_option('ContentScheduler_Options');
-			echo "<input id='tags-to-add' name='ContentScheduler_Options[tags-to-add]' size='40' type='text' value='{$options['tags-to-add']}' /><br />Comma-delimited list, e.g., 'news, martial arts, old content'<br />(leave blank to add no tags.)<br />";
+			$input_field = "<input id='tags-to-add' name='ContentScheduler_Options[tags-to-add]' size='40' type='text' value='{$options['tags-to-add']}' />";
+			printf( __("%s%sComma-delimited list, e.g., 'news, martial arts, old content'%s(leave blank to add no tags.)%s", 'contentscheduler'), $input_field, '<br />', '<br />', '<br />');
 		} // end draw_add_tags_fn()
 		
 		// Notification Settings
@@ -274,14 +283,14 @@ if ( !class_exists( "ContentScheduler" ) )
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
 			$items = array(
-							array("Notification on", "Notify when expiration date is reached, even if 'Expiration status' is set to 'Hold.'"),
-							array("Notification off", "Do not notify.")
+							array('1', __("Notification on", 'contentscheduler'), __("Notify when expiration date is reached, even if 'Expiration status' is set to 'Hold.'", 'contentscheduler')),
+							array('0', __("Notification off", 'contentscheduler'), __("Do not notify.", 'contentscheduler'))
 							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
 				$checked = ($options['notify-on'] == $item[0] ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-on]' type='radio' /> $item[0] &mdash; $item[1]</label><br />";
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-on]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // draw_notify_on_fn()
 		
@@ -291,12 +300,15 @@ if ( !class_exists( "ContentScheduler" ) )
 			// get this plugin's options from the database
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
-			$items = array("Notify Admin", "Do not notify Admin");
+			$items = array(
+							array('1', __("Notify Admin", 'contentscheduler') ),
+							array('0', __("Do not notify Admin", 'contentscheduler') )
+							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
-				$checked = ($options['notify-admin'] == $item ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item' name='ContentScheduler_Options[notify-admin]' type='radio' /> $item</label><br />";
+				$checked = ($options['notify-admin'] == $item[0] ) ? ' checked="checked" ' : '';
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-admin]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_notify_admin_fn()
 		
@@ -306,12 +318,15 @@ if ( !class_exists( "ContentScheduler" ) )
 			// get this plugin's options from the database
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
-			$items = array("Notify Author", "Do not notify Author");
+			$items = array(
+							array('1', __("Notify Author", 'contentscheduler') ),
+							array('0', __("Do not notify Author", 'contentscheduler') )
+							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
-				$checked = ($options['notify-author'] == $item ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item' name='ContentScheduler_Options[notify-author]' type='radio' /> $item</label><br />";
+				$checked = ($options['notify-author'] == $item[0] ) ? ' checked="checked" ' : '';
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-author]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_notify_author_fn
 		
@@ -332,8 +347,8 @@ if ( !class_exists( "ContentScheduler" ) )
 
 			foreach( $items as $item )
 			{
-				$checked = ($options['min-level'] == $item[0] ) ? ' selected="selected" ' : ' ';
-				echo "<option".$checked." value='$item[1]'> $item[0]</option>\n";
+				$checked = ($options['min-level'] == $item[1] ) ? ' selected="selected" ' : ' ';
+				echo "<option".$checked." value='$item[1]'>$item[0]</option>\n";
 			}
 			echo "</select>\n";
 		} // end draw_min_level_fn()
@@ -345,14 +360,14 @@ if ( !class_exists( "ContentScheduler" ) )
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
 			$items = array(
-							array("Notify on expiration", "Notify when expiration changes posts / pages."),
-							array("Do not notify on expiration", "Do not notify when expiration changes posts / pages.")
+							array('1', __("Notify on expiration", 'contentscheduler'), __("Notify when expiration changes posts / pages.", 'contentscheduler') ),
+							array('0', __("Do not notify on expiration", 'contentscheduler'), __("Do not notify when expiration changes posts / pages.", 'contentscheduler') )
 							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
 				$checked = ($options['notify-expire'] == $item[0] ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-expire]' type='radio' /> $item[0] &mdash; $item[1]</label><br />";
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-expire]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // draw_notify_expire_fn()
 
@@ -362,7 +377,8 @@ if ( !class_exists( "ContentScheduler" ) )
 			// get this plugin's options from the database
 			// This should have a default value of '0'
 			$options = get_option('ContentScheduler_Options');
-			echo "Notify <input id='notify-before' name='ContentScheduler_Options[notify-before]' size='10' type='text' value='{$options['notify-before']}' /> days before expiration.<br />";
+			$input_field = "<input id='notify-before' name='ContentScheduler_Options[notify-before]' size='10' type='text' value='{$options['notify-before']}' />";
+			printf( __("Notify %s days before expiration.%s", 'contentscheduler'), $input_field, '<br />');
 		} // end draw_notify_before_fn()
 		
 		// Show expiration date in columnar lists?
@@ -371,12 +387,15 @@ if ( !class_exists( "ContentScheduler" ) )
 			// get this plugin's options from the database
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
-			$items = array("Show expiration in columns", "Do not show expiration in columns");
+			$items = array(
+							array('1', __("Show expiration in columns", 'contentscheduler') ),
+							array('0', __("Do not show expiration in columns", 'contentscheduler') )
+							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
-				$checked = ($options['show-columns'] == $item ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item' name='ContentScheduler_Options[show-columns]' type='radio' /> $item</label><br />";
+				$checked = ($options['show-columns'] == $item[0] ) ? ' checked="checked" ' : '';
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[show-columns]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_show_columns_fn
 		
@@ -386,12 +405,15 @@ if ( !class_exists( "ContentScheduler" ) )
 			// get this plugin's options from the database
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
-			$items = array("Use datepicker", "Do not use datepicker");
+			$items = array(
+							array('1', __("Use datepicker", 'contentscheduler') ),
+							array('0', __("Do not use datepicker", 'contentscheduler') )
+							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
-				$checked = ($options['datepicker'] == $item ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item' name='ContentScheduler_Options[datepicker]' type='radio' /> $item</label><br />";
+				$checked = ($options['datepicker'] == $item[0] ) ? ' checked="checked" ' : '';
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[datepicker]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_show_datepicker_fn
 		
@@ -401,15 +423,24 @@ if ( !class_exists( "ContentScheduler" ) )
 			// get this plugin's options from the database
 			$options = get_option('ContentScheduler_Options');
 			// make array of radio button items
-			$items = array("Remove all data", "Do not remove data");
+			$items = array(
+							array('1', __("Remove all data", 'contentscheduler') ),
+							array('0', __("Do not remove data", 'contentscheduler') )
+							);
 			// Step through and spit out each item as radio button
 			foreach( $items as $item )
 			{
-				$checked = ($options['remove-cs-data'] == $item ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item' name='ContentScheduler_Options[remove-cs-data]' type='radio' /> $item</label><br />";
+				$checked = ($options['remove-cs-data'] == $item[0] ) ? ' checked="checked" ' : '';
+				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[remove-cs-data]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_remove_data_fn()
 
+		// version as read-only?
+		function draw_plugin_version()
+		{
+			$options = get_option('ContentScheduler_Options');
+  			echo "<input type='text' name='ContentScheduler_Options[version]' value='$options[version]' readonly='readonly' />";
+		} // end draw_plugin_version()
 
 
 
@@ -426,7 +457,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			{
 				// Check option 'datepicker'
 				$options = get_option('ContentScheduler_Options');
-				if( $options['datepicker'] == 'Use datepicker' )
+				if( $options['datepicker'] == '1' )
 				{
 					// Get the path to our plugin directory, and then append the js/whatever.js
 					// Path for Any+Time solution
@@ -449,7 +480,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			{
 				// Check option 'datepicker'
 				$options = get_option('ContentScheduler_Options');
-				if( $options['datepicker'] == 'Use datepicker' )
+				if( $options['datepicker'] == '1' )
 				{
 					// Styles for the jQuery Any+Time datepicker plugin
 					$anytime_path = plugins_url('/js/anytime/anytimec.css', __FILE__);
@@ -479,8 +510,8 @@ if ( !class_exists( "ContentScheduler" ) )
 			if ( function_exists( 'add_options_page' ) )
 			{
 				add_options_page(
-					'Content Scheduler Options Page',
-					'Content Scheduler',
+					__('Content Scheduler Options Page', 'contentscheduler'),
+					__('Content Scheduler', 'contentscheduler'),
 					'manage_options',
 					'ContentScheduler_options',
 					array('ContentScheduler', 'ContentScheduler_drawoptions_fn' ) );
@@ -504,7 +535,7 @@ if ( !class_exists( "ContentScheduler" ) )
 				do_settings_sections('ContentScheduler_Page_Title');
 				?>
 					<p class="submit">
-					<input name="Submit" type="submit" class="button-primary" value="<?php esc_attr_e('Save Changes'); ?>" />
+					<input name="Submit" type="submit" class="button-primary" value="<?php esc_attr_e('Save Changes', 'contentscheduler'); ?>" />
 					</p>
 				</form>
 			</div>
@@ -517,20 +548,26 @@ if ( !class_exists( "ContentScheduler" ) )
 		function draw_overview()
 		{
 			// This shows things under the title of Expiration Settings
-			echo "<p>Indicate whether to process content on expiration, and whether to delete it or make certain changes to it.</p>\n";
+			echo "<p>";
+			_e( 'Indicate whether to process content on expiration, and whether to delete it or make certain changes to it.', 'contentscheduler' );
+			echo "</p>\n";
 			
 		} // end overview_settings()
 		
 		function draw_overview_not()
 		{
 			// This shows things under the title of Notification Settings
-			echo "<p>Indicate whether to send notifications about content expiration, who to notify, and when they should be notified.</p>\n";
+			echo "<p>";
+			_e( 'Indicate whether to send notifications about content expiration, who to notify, and when they should be notified.', 'contentscheduler' );
+			echo "</p>\n";
 		} // end draw_overview_not()
 		
 		function draw_overview_disp()
 		{
 			// This shows things under the title of Display Settings
-			echo "<p>Control how Content Scheduler custom input areas display in the WordPress admin area.<br /> \nAlso indicate if deleting the plugin should remove its options and post metadata.</p>\n";
+			echo "<p>";
+			_e( 'Control how Content Scheduler custom input areas display in the WordPress admin area. Also indicate if deleting the plugin should remove its options and post metadata.', 'contentscheduler' );
+			echo "</p>\n";
 		} // end draw_overview_disp()
 
 // ==========================================================================
@@ -574,40 +611,107 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Build an array of each option and its default setting
 			$arr_defaults = array
 			(
-			    "version" => "0.9.3",
-				"exp-status" => "Apply changes",
+			    "version" => "0.9.5",
+				"exp-status" => "1",
 			    "exp-period" => "1",
-			    "chg-status" => "Draft",
-			    "chg-sticky" => "No Change",
-			    "chg-cat-method" => "No Change",
+			    "chg-status" => "2",
+			    "chg-sticky" => "0",
+			    "chg-cat-method" => "0",
 			    "selcats" => "",
 			    "tags-to-add" => "",
-			    "notify-on" => "Notification off",
-			    "notify-admin" => "Do not notify Admin",
-			    "notify-author" => "Do not notify Author",
-			    "notify-expire" => "Do not notify on expiration",
+			    "notify-on" => "0",
+			    "notify-admin" => "0",
+			    "notify-author" => "0",
+			    "notify-expire" => "0",
 			    "notify-before" => "0",
-			    "min-level" => "editor",
-			    "time-to-add" => "0",
-			    "extend-which" => "",
-			    "show-columns" => "Do not show expiration in columns",
-			    "datepicker" => "Do not use datepicker",
-			    "remove-cs-data" => "Do not remove data"
+			    "min-level" => "2",
+			    "show-columns" => "0",
+			    "datepicker" => "0",
+			    "remove-cs-data" => "0"
 			);
 			
 			// check to see if we need to set defaults
-			// first condition is that the 'restore defaults' checkbox is on
+			// first condition is that the 'restore defaults' checkbox is on (we don't have that yet.)
 			// OR condition is that defaults haven't even been set
-			if( ($options['restore']=='on') || (!is_array( $options ) ) )
+			if( !is_array( $options )  )
 			{
+				// We can safely set options to defaults
 				update_option('ContentScheduler_Options', $arr_defaults);
 			}
 			else
 			{
-				// we found some ContentScheduler_Options in the database,
-				// but we want to make sure we have added any updated options
-				// The following will help make sure NEW options get added (from an updated version of Content Scheduler)
-				// This starts with our defaults, then superimposes our currenly-saved options over the top
+				// we found some ContentScheduler_Options in the database
+				// We need to check the "version" and, if it is less than 0.9.5 or non-existent, we need to convert english string values to numbers
+				if( !isset( $options['version'] ) || $options['version'] < '0.9.5' )
+				{
+					// we want to change options from english strings to numbers
+					switch( $options['exp-status'] )
+					{
+						case 'Hold':
+							$options['exp-status'] = '0';
+							break;
+						case 'Delete':
+							$options['exp-status'] = '2';
+							break;
+						default:
+							$options['exp-status'] = '1';
+					} // end switch
+					
+					switch( $options['chg-status'] )
+					{
+						case 'No Change':
+							$options['chg-status'] = '0';
+							break;
+						case 'Pending':
+							$options['chg-status'] = '1';
+							break;
+						case 'Private':
+							$options['chg-status'] = '3';
+							break;
+						default:
+							$options['chg-status'] = '2';
+					}
+					
+					/*
+					$r = (1 == $v) ? 'Yes' : 'No'; // $r is set to 'Yes'
+					$r = (3 == $v) ? 'Yes' : 'No'; // $r is set to 'No'
+					*/
+					$options['chg-sticky'] = ( 'No Change' == $options['chg-sticky'] ) ? '0' : '1';
+					
+					switch( $options['chg-cat-method'] )
+					{
+						case 'Add selected':
+							$options['chg-cat-method'] = '1';
+							break;
+						case 'Remove selected':
+							$options['chg-cat-method'] = '2';
+							break;
+						case 'Match selected':
+							$options['chg-cat-method'] = '3';
+							break;
+						default:
+							$options['chg-cat-method'] = '0';
+					}
+					
+					$options['notify-on'] = ( 'Notification off' == $options['notify-on'] ) ? '0' : '1';
+					
+					$options['notify-admin'] = ( 'Do not notify admin' == $options['notify-admin'] ) ? '0' : '1';
+					
+					$options['notify-author'] = ( 'Do not notify author' == $options['notify-author'] ) ? '0' : '1';
+					
+					$options['notify-expire'] = ( 'Do not notify on expiration' == $options['notify-expire'] ) ? '0' : '1';
+					
+					$options['show-columns'] = ( 'Do not show expiration in columns' == $options['show-columns'] ) ? '0' : '1';
+					
+					$options['datepicker'] = ( 'Do not use datepicker' == $options['datepicker'] ) ? '0' : '1';
+					
+					$options['remove-cs-data'] = ( 'Do not remove data' == $options['remove-cs-data'] ) ? '0' : '1';
+					
+					// don't forget to do array_replace when we're done?? Or what?
+					// This whole block should perhaps be placed in a function
+				}
+				
+				// make sure we have added any updated options
 				if (!function_exists('array_replace'))
 				{
 					// we're before php 5.3.0, and need to use our array_replace
@@ -618,6 +722,7 @@ if ( !class_exists( "ContentScheduler" ) )
 					// go ahead and use php 5.3.0 array_replace
 					$new_options = array_replace( $arr_defaults, $options );
 				}
+				
 				update_option('ContentScheduler_Options', $new_options);
 			}
 
@@ -699,7 +804,7 @@ if ( !class_exists( "ContentScheduler" ) )
 // ====================================================
 		// Validates values from the ADMIN ContentScheduler_Options group
 		function validate_settings($input)
-		{	
+		{
 			// We need a value for exp-period
 			if ( empty( $input['exp-period'] ) )
 			{
@@ -716,7 +821,7 @@ if ( !class_exists( "ContentScheduler" ) )
 					
 					add_settings_error('ContentScheduler_Options',
 						'settings_updated',
-						__('Only positive integers are accepted for "Expiration period".'),
+						__('Only positive integers are accepted for "Expiration period".', 'contentscheduler'),
 						'error');
 				}
 			}
@@ -742,7 +847,7 @@ if ( !class_exists( "ContentScheduler" ) )
 					// register an error, officially
 					add_settings_error('ContentScheduler_Options',
 						'settings_updated',
-						__('Only positive integers are accepted for "Notify before expiration".'),
+						__('Only positive integers are accepted for "Notify before expiration".', 'contentscheduler'),
 						'error');
 				}
 			}
@@ -787,13 +892,13 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Add the box to Post write panels
 		    add_meta_box( 'ContentScheduler_sectionid', 
 							__( 'Content Scheduler', 
-							'ContentScheduler_textdomain' ), 
+							'contentscheduler' ), 
 							array($this, 'ContentScheduler_custom_box_fn'), 
 							'post' );
 		    // Add the box to Page write panels
 		    add_meta_box( 'ContentScheduler_sectionid', 
 							__( 'Content Scheduler', 
-							'ContentScheduler_textdomain' ), 
+							'contentscheduler' ), 
 							array($this, 'ContentScheduler_custom_box_fn'), 
 							'page' );
 			// Get a list of all custom post types
@@ -811,7 +916,7 @@ if ( !class_exists( "ContentScheduler" ) )
 				// echo '<p>'. $post_type. '</p>';
 				add_meta_box( 'ContentScheduler_sectionid',
 								__( 'Content Scheduler',
-								'ContentScheduler_textdomain' ),
+								'contentscheduler' ),
 								array( $this, 'ContentScheduler_custom_box_fn'),
 								$post_type );
 			}
@@ -838,7 +943,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Field for datetime of expiration
 			$datestring = ( get_post_meta( $post->ID, 'cs-expire-date', true) );
 			// Should we check for format of the date string? (not doing that presently)
-			echo '<label for="cs-expire-date">' . __("Expiration date and hour", 'ContentScheduler_textdomain' ) . '</label><br />';
+			echo '<label for="cs-expire-date">' . __("Expiration date and hour", 'contentscheduler' ) . '</label><br />';
 			echo '<input type="text" id="cs-expire-date" name="cs-expire-date" value="'.$datestring.'" size="25" />';
 			echo ' Input date and time as: Year-Month-Day Hour:00:00 e.g., 2010-11-25 08:00:00<br />';
 
@@ -952,9 +1057,10 @@ if ( !class_exists( "ContentScheduler" ) )
 		{
 			// we should get our options right now, and decide if we need to proceed or not.
 			$options = get_option('ContentScheduler_Options');
+						
 			// Do we need to process expirations?
-			if( $options['exp-status'] != 'Hold' )
-			{
+			if( $options['exp-status'] != '0' )
+			{				
 				// We need to process expirations
 				$this->process_expirations();
 			} // end if
@@ -967,7 +1073,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			$options = get_option('ContentScheduler_Options');
 
 			// Do we need to process notifications?
-			if( $options['notify-on'] != 'Notification off' )
+			if( $options['notify-on'] != '0' )
 			{
 				// We need to process notifications
 				// Note, these are only notifications that occur as a warning
@@ -1072,10 +1178,10 @@ if ( !class_exists( "ContentScheduler" ) )
 		{
 			// Check to see if we really want to add our column
 			$options = get_option('ContentScheduler_Options');
-			if( $options['show-columns'] == 'Show expiration in columns' )
+			if( $options['show-columns'] == '1' )
 			{
 				// we're just adding our own item to the already existing $columns array
-			  	$columns['cs-exp-date'] = 'Expires at:';
+			  	$columns['cs-exp-date'] = __('Expires at:', 'contentscheduler');
 			}
 		  	return $columns;
 		} // end cs_add_expdate_column()
@@ -1086,7 +1192,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			global $wpdb, $post;
 			// Check to see if we really want to add our column
 			$options = get_option('ContentScheduler_Options');
-			if( $options['show-columns'] == 'Show expiration in columns' )
+			if( $options['show-columns'] == '1' )
 			{
 				$id = $post->ID;
 				if ($column_name === 'cs-exp-date')
@@ -1098,7 +1204,8 @@ if ( !class_exists( "ContentScheduler" ) )
 					// determine whether expiration is enabled or disabled
 					if( get_post_meta( $post->ID, 'cs-enable-schedule', true) != 'Enable' )
 					{
-						$ed .= "<br />\n(Expiration Disabled)";
+						$ed .= "<br />\n";
+						$ed .= __( '(Expiration Disabled)', 'contentscheduler' );
 					} // end if
 					echo $ed;
 			  	} // end if
@@ -1164,7 +1271,8 @@ function handle_shortcode( $attributes )
 
 	return date( "$format", $expirationdt );
 	*/
-	return "Expires: $expirationdt\n";
+	$return_string = printf(__("Expires: %s", 'contentscheduler'), $expirationdt);
+	return $return_string;
 }
 
 // =======================================================================

@@ -9,16 +9,16 @@
   	        // STATUS AND VISIBILITY
   	        switch( $options['chg-status'] )
   	        {
-				case "No Change":
+				case '0':
 					// we do not need a post_status key
 					break;
-				case "Pending":
+				case '1':
 					$update_post['post_status'] = 'pending';
 					break;
-				case "Draft":
+				case '2':
 					$update_post['post_status'] = 'draft';
 					break;
-				case "Private":
+				case '3':
 					$update_post['post_status'] = 'private';
 					break;
 				// default:

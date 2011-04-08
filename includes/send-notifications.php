@@ -9,13 +9,16 @@
 			switch( $why_notify )
 			{
 				case "expired":
-					$why_notify = "Expiration";
+					/* translators: flag explaining why notification is occuring */
+					$why_notify = _('Expiration', 'contentscheduler');
 					break;
 				case "notified":
-					$why_notify = "Pending";
+					/* translators: flag explaining why notification is occuring */
+					$why_notify = _('Pending', 'contentscheduler');
 					break;
 				default:
-					$why_notify = "Mysterious";
+					/* translators: flag explaining why notification is occuring */
+					$why_notify = _('Mysterious', 'contentscheduler');
 			} // end switch
 			
 			// Determine who we need to notify:
@@ -24,9 +27,9 @@
 			// b. 'author'
 			// c. 'both'
 			$notify_whom = '';
-			if( $options['notify-admin'] == "Notify Admin" )
+			if( $options['notify-admin'] == '1' )
 			{
-				if( $options['notify-author'] == "Notify Author" )
+				if( $options['notify-author'] == '1' )
 				{
 					$notify_whom = 'both';
 				}
@@ -35,7 +38,7 @@
 					$notify_whom = 'admin';
 				}
 			}
-			elseif( $options['notify-author'] == "Notify Author" )
+			elseif( $options['notify-author'] == '1' )
 			{
 				$notify_whom = 'author';
 			} // end if
@@ -106,16 +109,16 @@
 			foreach( $notify_list as $user )
 			{
 				// reset $usr_msg
-				$usr_msg = "The following notifications come from the website: $blog_name\n";
+				$usr_msg = sprintf( __("The following notifications come from the website: %s\n", 'contentscheduler'), $blog_name );
 				// tell them why they are receiving the notification
-				$usr_msg .= "Reason for notification:\n";
+				$usr_msg .= _("Reason for notification:\n", 'contentscheduler');
 				if( $why_notify == 'Expiration' )
 				{
-					$usr_msg .= "These notifications indicate items Content Scheduler has automatically applied expiration changes to.\n";
+					$usr_msg .= __("These notifications indicate items Content Scheduler has automatically applied expiration changes to.\n", 'contentscheduler');
 				}
 				else
 				{
-					$usr_msg .= "These notifications indicate items expiring soon OR items that have expired but have not had any automatic changes applied.\n";
+					$usr_msg .= __("These notifications indicate items expiring soon OR items that have expired but have not had any automatic changes applied.\n", 'contentscheduler');
 				} // end if
 				$usr_msg .= "====================\n";
 				// get this user's email address -- it is the key for the current element, $user
@@ -126,14 +129,14 @@
 					// step through elements in the user's array
 					foreach( $user as $post )
 					{						
-						$usr_msg .= "The Post / Page entitled '" . $post['post_title'] . ",' \nwith the post_id of '" . $post['ID'] . ",' \nhas an expiration date of '" . $post['expiration_date'] . ".'\n";
-						$usr_msg .= "Unless the content is deleted, it can be viewed at " . $post['view_url'] . ".\n";
+						$usr_msg .= sprintf( __("The Post / Page entitled '%s $post['post_title'],' \nwith the post_id of '%d $post['ID'],' \nhas an expiration date of '%s $post['expiration_date']'\n", 'contentscheduler'), $post['post_title'], $post['ID'], $post['expiration_date'] );
+						$usr_msg .= sprintf( __("Unless the content is deleted, it can be viewed at %s.\n", 'contentscheduler'), $post['view_url'] );
 						$usr_msg .= "=====\n";
 					} // end foreach stepping through list of posts for a user
 					
 					// send $msg to $user_email
 					// Build subject line
-					$subject = "$why_notify Notification from $blog_name";
+					$subject = sprintf( __("%s Notification from %s", 'contentscheduler'), $why_notify, $blog_name );
 										
 					// Send the message
 					if( wp_mail( $usr_email, $subject, $usr_msg ) == 1 )
