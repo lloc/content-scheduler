@@ -9,7 +9,7 @@ Donate link: http://structureweb.co/donate/
 Requires at least: 2.9
 Tested up to: 3.1.1
 Stable tag: trunk
-Version: 0.9.5
+Version: 0.9.6
 
 Schedule Content to automatically expire and change at a certain time, and provide notification of expiration.
 
@@ -79,6 +79,9 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 
 == Changelog ==
 
+= 0.9.6 =
+* Implemented a fix for users with PHP version earlier than 5.3.
+
 = 0.9.5 =
 * Added i18n support
 * Changed plugin option values that were english strings into numerical values
@@ -101,6 +104,9 @@ Maybe. All the code is in there to make it work, but we need to do more testing 
 * First public release.
 
 == Upgrade Notice ==
+
+= 0.9.6 =
+* Implemented a fix for users with PHP version earlier than 5.3.
 
 = 0.9.5 =
 * Added i18n support

@@ -1281,7 +1281,7 @@ function handle_shortcode( $attributes )
 // 3/28/2011 12:21:31 AM -pk
 // Added for pre 5.3 php compatibility
 // NOTE there is a function of the same name in php 5.3.0+, but this one is within our Class
-function array_replace( array &$array, array &$array1 )
+function array_replace( &$array, &$array1 )
 {
   $args = func_get_args();
   $count = func_num_args();
