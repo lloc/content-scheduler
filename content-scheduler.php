@@ -611,7 +611,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Build an array of each option and its default setting
 			$arr_defaults = array
 			(
-			    "version" => "0.9.5",
+			    "version" => "0.9.6",
 				"exp-status" => "1",
 			    "exp-period" => "1",
 			    "chg-status" => "2",
