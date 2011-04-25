@@ -3,7 +3,7 @@
 Plugin Name: Content Scheduler
 Plugin URI: http://structureweb.co/wordpress-plugins/content-scheduler/
 Description: Set Posts and Pages to automatically expire. Upon expiration, delete, change categories, status, or unstick posts. Also notify admin and author of expiration.
-Version: 0.9.5
+Version: 0.9.6
 Author: Paul Kaiser
 Author URI: http://structureweb.co
 License: GPL2
