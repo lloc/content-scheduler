@@ -1,12 +1,9 @@
 <?php
 // find posts that need to take some expiration action
 			global $wpdb;
-			
 			$options = get_option('ContentScheduler_Options');
-			
 			// setup timezone
 			$this->setup_timezone();
-			
 			// select all Posts / Pages that have "enable-expiration" set and have expiration date older than right now
 			// 12/8/2010 7:18:08 PM
 			// Original has expiration date in results -- differing from process_notifications and causing problems.
@@ -16,16 +13,14 @@
 				' .$wpdb->postmeta. ' AS postmetadate, 
 				' .$wpdb->postmeta. ' AS postmetadoit, 
 				' .$wpdb->posts. ' AS posts 
-				WHERE postmetadoit.meta_key = "cs-enable-schedule" 
+				WHERE postmetadoit.meta_key = "_cs-enable-schedule" 
 				AND postmetadoit.meta_value = "Enable" 
-				AND postmetadate.meta_key = "cs-expire-date" 
+				AND postmetadate.meta_key = "_cs-expire-date" 
 				AND postmetadate.meta_value <= "' . date("Y-m-d H:i:s") . '" 
 				AND postmetadate.post_id = postmetadoit.post_id 
 				AND postmetadate.post_id = posts.ID 
 				AND posts.post_status = "publish"';
-
 			$result = $wpdb->get_results($querystring);
-		
 			// Act upon the results
 			if ( ! empty( $result ) )
 			{
@@ -33,7 +28,7 @@
 				// we do this in its own loop before deleting
 				// because do_notifications() needs to access the posts before they are deleted to get info for the notify message
 				// Maybe not necessary, though, since deleting just puts them in trash?
-				if( $options['notify-expire'] == '1' )
+				if( $options['notify-on'] == '1' )
 				{
 					// build array of posts to send to do_notifications
 					$posts_to_notify_on = array();
@@ -44,7 +39,6 @@
 					// call the notification function
 					$this->do_notifications($posts_to_notify_on, 'expired');
 				} // end if for notification on expiration
-				
 				// Shortcut: If exp-status = "Delete" then let's just delete and get on with things.
 				if( $options['exp-status'] == '2' )
 				{

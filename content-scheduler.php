@@ -3,35 +3,29 @@
 Plugin Name: Content Scheduler
 Plugin URI: http://structureweb.co/wordpress-plugins/content-scheduler/
 Description: Set Posts and Pages to automatically expire. Upon expiration, delete, change categories, status, or unstick posts. Also notify admin and author of expiration.
-Version: 0.9.6
+Version: 0.9.7
 Author: Paul Kaiser
 Author URI: http://structureweb.co
 License: GPL2
 */
-
 /*  Copyright 2011  Paul Kaiser  (email : paul.kaiser@gmail.com)
-
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as 
     published by the Free Software Foundation.
-
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
 // avoid direct calls to this file, because now WP core and framework have been used
 if ( !function_exists('add_action') ) {
     header('Status: 403 Forbidden');
     header('HTTP/1.1 403 Forbidden');
     exit();
 }
-
 // assign some constants if they didn't already get taken care of
 if ( ! defined( 'WP_CONTENT_URL' ) )
 	define( 'WP_CONTENT_URL', get_option( 'siteurl' ) . '/wp-content' );
@@ -41,14 +35,6 @@ if ( ! defined( 'WP_PLUGIN_URL' ) )
 	define( 'WP_PLUGIN_URL', WP_CONTENT_URL. '/plugins' );
 if ( ! defined( 'WP_PLUGIN_DIR' ) )
 	define( 'WP_PLUGIN_DIR', WP_CONTENT_DIR . '/plugins' );
-
-
-
-
-
-
-
-
 // Define our plugin's wrapper class
 if ( !class_exists( "ContentScheduler" ) )
 {
@@ -59,7 +45,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Constructor
 			register_activation_hook( __FILE__, array($this, 'run_on_activate') );
 			register_deactivation_hook( __FILE__, array($this, 'run_on_deactivate') );
-
 			// =============================================================
 			// Actions
 			// =============================================================
@@ -89,34 +74,22 @@ if ( !class_exists( "ContentScheduler" ) )
 			add_action('add_meta_boxes', array($this, 'ContentScheduler_add_custom_box_fn'));
 			// Do something with the data entered in the Write panels fields
 			add_action('save_post', array($this, 'ContentScheduler_save_postdata_fn'));
-			
 			// ==========
 			// Add column to Post / Page lists
 			add_action ( 'manage_posts_custom_column', array( $this, 'cs_show_expdate' ) );
 			add_action ( 'manage_pages_custom_column', array( $this, 'cs_show_expdate' ) );
-			
 			// =============================================================
 			// Shortcodes
 			// =============================================================
 			add_shortcode('cs_expiration', array( $this, 'handle_shortcode' ) );
-
 			// =============================================================
 			// Filters
 			// =============================================================
 			add_filter('cron_schedules', array( $this, 'add_cs_cron_fn' ) );
-
 			// Showing custom columns in list views
 			add_filter ('manage_posts_columns', array( $this, 'cs_add_expdate_column' ) );
 			add_filter ('manage_pages_columns', array( $this, 'cs_add_expdate_column' ) );
 		} // end ContentScheduler Constructor
-
-
-
-
-
-
-
-
 		// =============================================================
 		// == Administration Init Stuff
 		// =============================================================
@@ -133,14 +106,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			$plugin_dir = basename(dirname(__FILE__)) . '/lang';
 			load_plugin_textdomain( 'contentscheduler', null, $plugin_dir );
 		}
-
-
-
-
-
-
-
-
 // ========================================================================
 // == Options Field Drawing Functions for add_settings
 // ========================================================================
@@ -163,8 +128,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[exp-status]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // end draw_set_expstatus_fn()
-
-
 		// 12/30/2010 3:03:11 PM -pk
 		// Get the number of minutes they want wp-cron to wait between expiration checks.
 		function draw_set_expperiod_fn()
@@ -173,11 +136,45 @@ if ( !class_exists( "ContentScheduler" ) )
 			// This should have a default value of '1'
 			$options = get_option('ContentScheduler_Options');
 			$input_field = "<input id='exp-period' name='ContentScheduler_Options[exp-period]' size='10' type='text' value='{$options['exp-period']}' />";
-			printf( __("Wait %s minutes between expiration checks."), $input_field);
+			printf( __("Wait %s minutes between expiration checks.", 'contentscheduler'), $input_field);
 			echo "<br />\n";
 		} // end draw_set_expperiod_fn()
-
-		
+		// 4/28/2011 3:47:22 PM -pk
+		// Get default expiration time.
+		// This will be added to the publish time and used for expiration, if "DEFAULT" (case insensitive) is used in the date field
+		function draw_set_expdefault_fn()
+		{
+			$options = get_option('ContentScheduler_Options');
+			// This is stored as a string
+			// does update options or whatever... does it serialize and unserialize? I'm guessing not.
+			if( !isset( $options['exp-default'] ) )
+			{
+				// no default is in the database for some reason, so let's call it empty and move on
+				$default_hours = '0';
+				$default_days = '0';
+				$default_weeks = '0';
+			}
+			else
+			{
+				// get the saved default and split it up
+				$default_expiration_array = $options['exp-default'];
+				$default_hours = $default_expiration_array['def-hours'];
+				$default_days = $default_expiration_array['def-days'];
+				$default_weeks = $default_expiration_array['def-weeks'];
+			}
+			// Spit it all out
+			_e( 'For default expirations, add the following amount of time to publication time.', 'contentscheduler' );
+			echo "<br />\n";
+			echo "<table>\n";
+			echo "<thead>\n<tr>\n";
+			echo "<th scope='col'>Hours:</th><th scope='col'>Days:</th><th scope='col'>Weeks:</th>\n";
+			echo "</thead>\n</tr>\n";
+			echo "<tr>\n";
+			echo "<td><input id='def-hours' name='ContentScheduler_Options[def-hours] size='4' type='text' value='$default_hours' /></td>\n";
+			echo "<td><input id='def-days' name='ContentScheduler_Options[def-days] size='4' type='text' value='$default_days' /></td>\n";
+			echo "<td><input id='def-weeks' name='ContentScheduler_Options[def-weeks] size='4' type='text' value='$default_weeks' /></td>\n";
+			echo "</tr>\n</table>\n";
+		} // end draw_set_expdefault_fn()
 		// How do we change "Status?"
 		// chg-status
 		function draw_set_chgstatus_fn()
@@ -198,7 +195,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-status]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // end draw_set_chgstatus_fn()
-		
 		// How do we change "Stickiness" (Stick post to home page)
 		// chg-sticky
 		function draw_set_chgsticky_fn()
@@ -217,7 +213,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-sticky]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // end draw_set_chgsticky_fn()
-		
 		// How do we apply the category changes below?
 		// chg-cat-method
 		function draw_set_chgcatmethod_fn()
@@ -238,7 +233,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[chg-cat-method]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // end draw_set_chgcatmethod_fn()
-		
 		// What categories do we have available to change to?
 		// chg-categories
 		function draw_set_categories_fn()
@@ -262,7 +256,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo $box;
 			} // end foreach
 		} // end draw_set_categories_fn()
-		
 		// What tags do we want added to content types that support tags?
 		// tags-to-add
 		// Be sure to check the content type for post_tags support before attempting to add
@@ -270,11 +263,12 @@ if ( !class_exists( "ContentScheduler" ) )
 		{
 			// get this plugin's options from the database
 			// This should have a default value of '1'
-			$options = get_option('ContentScheduler_Options');
-			$input_field = "<input id='tags-to-add' name='ContentScheduler_Options[tags-to-add]' size='40' type='text' value='{$options['tags-to-add']}' />";
-			printf( __("%s%sComma-delimited list, e.g., 'news, martial arts, old content'%s(leave blank to add no tags.)%s", 'contentscheduler'), $input_field, '<br />', '<br />', '<br />');
+			$options = get_option('ContentScheduler_Options'); 
+			/* translators: example list of tags */
+			_e( "Comma-delimited list, e.g., '+news, -martial arts, +old content'" );
+			echo "<br \>\n<input id='tags-to-add' name='ContentScheduler_Options[tags-to-add]' size='40' type='text' value='{$options['tags-to-add']}' /><br />";
+			_e( "(leave blank to change no tags.)" );
 		} // end draw_add_tags_fn()
-		
 		// Notification Settings
 		// Notification on or off?
 		function draw_notify_on_fn()
@@ -293,7 +287,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-on]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // draw_notify_on_fn()
-		
 		// Notify the site admin?
 		function draw_notify_admin_fn()
 		{
@@ -311,7 +304,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-admin]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_notify_admin_fn()
-		
 		// Notify the content author?
 		function draw_notify_author_fn()
 		{
@@ -329,7 +321,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-author]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_notify_author_fn
-		
 		// Set minimum level to see Content Scheduler fields and shortcodes
 		// http://codex.wordpress.org/Roles_and_Capabilities#Roles
 		function draw_min_level_fn()
@@ -344,7 +335,6 @@ if ( !class_exists( "ContentScheduler" ) )
 							array("subscriber", 0)
 							);
 			echo "<select id='min-level' name='ContentScheduler_Options[min-level]'>\n";
-
 			foreach( $items as $item )
 			{
 				$checked = ($options['min-level'] == $item[1] ) ? ' selected="selected" ' : ' ';
@@ -353,6 +343,9 @@ if ( !class_exists( "ContentScheduler" ) )
 			echo "</select>\n";
 		} // end draw_min_level_fn()
 		
+		// 8/8/2011 11:51:41 PM -pk
+		// 0.9.7 We are removing this option.
+		/*
 		// Notify upon expiration?
 		function draw_notify_expire_fn()
 		{
@@ -370,7 +363,8 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-expire]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
 			} // end foreach
 		} // draw_notify_expire_fn()
-
+		*/
+		
 		// Notify number of days before expiration?
 		function draw_notify_before_fn()
 		{
@@ -378,9 +372,9 @@ if ( !class_exists( "ContentScheduler" ) )
 			// This should have a default value of '0'
 			$options = get_option('ContentScheduler_Options');
 			$input_field = "<input id='notify-before' name='ContentScheduler_Options[notify-before]' size='10' type='text' value='{$options['notify-before']}' />";
-			printf( __("Notify %s days before expiration.%s", 'contentscheduler'), $input_field, '<br />');
+			printf( __("Notify %s days before expiration.", 'contentscheduler'), $input_field );
+			echo "<br />\n";
 		} // end draw_notify_before_fn()
-		
 		// Show expiration date in columnar lists?
 		function draw_show_columns_fn()
 		{
@@ -398,7 +392,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[show-columns]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_show_columns_fn
-		
 		// Use jQuery datepicker for the date field?
 		function draw_show_datepicker_fn()
 		{
@@ -416,7 +409,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[datepicker]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_show_datepicker_fn
-		
 		// Remove all CS data upon uninstall?
 		function draw_remove_data_fn()
 		{
@@ -434,19 +426,12 @@ if ( !class_exists( "ContentScheduler" ) )
 				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[remove-cs-data]' type='radio' /> $item[1]</label><br />";
 			} // end foreach
 		} // end draw_remove_data_fn()
-
 		// version as read-only?
 		function draw_plugin_version()
 		{
 			$options = get_option('ContentScheduler_Options');
   			echo "<input type='text' name='ContentScheduler_Options[version]' value='$options[version]' readonly='readonly' />";
 		} // end draw_plugin_version()
-
-
-
-
-
-
 // ========================================================================
 // == JavaScript and CSS Enqueueing?
 // ========================================================================
@@ -473,7 +458,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				}
 			}
 		} // end cs_edit_scripts()
-		
 		function cs_edit_styles()
 		{
 			if (function_exists('wp_enqueue_style') )
@@ -489,14 +473,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				}
 			}
 		} // end cs_edit_styles()
-
-
-
-
-
-
-
-
 // ====================================================================
 // == Administration Menus Stuff
 // ====================================================================
@@ -505,7 +481,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Make sure we should be here
 			if (!function_exists('current_user_can') || !current_user_can('manage_options') )
 			return;
-			
 			// Add our plugin options page
 			if ( function_exists( 'add_options_page' ) )
 			{
@@ -517,7 +492,6 @@ if ( !class_exists( "ContentScheduler" ) )
 					array('ContentScheduler', 'ContentScheduler_drawoptions_fn' ) );
 			}
 		} // end admin_menus()
-		
 		// Show our Options page in Admin
 		function ContentScheduler_drawoptions_fn()
 		{
@@ -541,7 +515,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			</div>
 			<?php
 		} // end sample_form()
-		
 		// Prints an overview under the Settings Section Title
 		// Could be used for help strings, whatever.
 		// I think I've seen some plugins do jQuery accordian to hide / show help.
@@ -551,9 +524,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			echo "<p>";
 			_e( 'Indicate whether to process content on expiration, and whether to delete it or make certain changes to it.', 'contentscheduler' );
 			echo "</p>\n";
-			
 		} // end overview_settings()
-		
 		function draw_overview_not()
 		{
 			// This shows things under the title of Notification Settings
@@ -561,7 +532,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			_e( 'Indicate whether to send notifications about content expiration, who to notify, and when they should be notified.', 'contentscheduler' );
 			echo "</p>\n";
 		} // end draw_overview_not()
-		
 		function draw_overview_disp()
 		{
 			// This shows things under the title of Display Settings
@@ -569,11 +539,9 @@ if ( !class_exists( "ContentScheduler" ) )
 			_e( 'Control how Content Scheduler custom input areas display in the WordPress admin area. Also indicate if deleting the plugin should remove its options and post metadata.', 'contentscheduler' );
 			echo "</p>\n";
 		} // end draw_overview_disp()
-
 // ==========================================================================
 // == Set options to defaults - used during plugin activation
 		// define default option settings
-
 		// ====================
 		function run_on_activate()
 		{
@@ -601,17 +569,30 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Seems like it is not a multisite install OR it is a single blog of a multisite
 			$this->activate_function('');
 		} // end run_on_activate()
-		
 		// tied to the run_on_activate function above
 		function activate_function( $current_blog_id = '' )
 		{
 			$this->setup_timezone();
 			// Let's see about setting some default options
 			$options = get_option('ContentScheduler_Options');
+			// 4/26/2011 3:58:08 PM -pk
+			// If version newer than 0.9.7, we need to alter the name of our postmeta variables
+			if( is_array( $options ) )
+			{
+				// The plugin has at least been installed before, so it could be older
+				if( !isset( $options['version'] ) || $options['version'] < '0.9.7' )
+				{
+					// we do need to change existing postmeta variable names in the database
+					include 'includes/update-postmeta-names.php';
+				}
+			}
 			// Build an array of each option and its default setting
+			// exp-default is supposed to be a serialized array of hours, days, weeks
+			$expiration_default = array( 'exp-hours' => '0', 'exp-days' => '0', 'exp-weeks' => '0' );
+			// $expiration_default = serialize( $expiration_default );
 			$arr_defaults = array
 			(
-			    "version" => "0.9.6",
+			    "version" => "0.9.7",
 				"exp-status" => "1",
 			    "exp-period" => "1",
 			    "chg-status" => "2",
@@ -627,9 +608,9 @@ if ( !class_exists( "ContentScheduler" ) )
 			    "min-level" => "2",
 			    "show-columns" => "0",
 			    "datepicker" => "0",
-			    "remove-cs-data" => "0"
+			    "remove-cs-data" => "0",
+			    "exp-default" => $expiration_default
 			);
-			
 			// check to see if we need to set defaults
 			// first condition is that the 'restore defaults' checkbox is on (we don't have that yet.)
 			// OR condition is that defaults haven't even been set
@@ -644,7 +625,7 @@ if ( !class_exists( "ContentScheduler" ) )
 				// We need to check the "version" and, if it is less than 0.9.5 or non-existent, we need to convert english string values to numbers
 				if( !isset( $options['version'] ) || $options['version'] < '0.9.5' )
 				{
-					// we want to change options from english strings to numbers
+					// we want to change options from english strings to numbers - this happened from 0.9.4 to 0.9.5
 					switch( $options['exp-status'] )
 					{
 						case 'Hold':
@@ -656,7 +637,6 @@ if ( !class_exists( "ContentScheduler" ) )
 						default:
 							$options['exp-status'] = '1';
 					} // end switch
-					
 					switch( $options['chg-status'] )
 					{
 						case 'No Change':
@@ -671,13 +651,11 @@ if ( !class_exists( "ContentScheduler" ) )
 						default:
 							$options['chg-status'] = '2';
 					}
-					
 					/*
 					$r = (1 == $v) ? 'Yes' : 'No'; // $r is set to 'Yes'
 					$r = (3 == $v) ? 'Yes' : 'No'; // $r is set to 'No'
 					*/
 					$options['chg-sticky'] = ( 'No Change' == $options['chg-sticky'] ) ? '0' : '1';
-					
 					switch( $options['chg-cat-method'] )
 					{
 						case 'Add selected':
@@ -692,25 +670,18 @@ if ( !class_exists( "ContentScheduler" ) )
 						default:
 							$options['chg-cat-method'] = '0';
 					}
-					
 					$options['notify-on'] = ( 'Notification off' == $options['notify-on'] ) ? '0' : '1';
-					
 					$options['notify-admin'] = ( 'Do not notify admin' == $options['notify-admin'] ) ? '0' : '1';
-					
 					$options['notify-author'] = ( 'Do not notify author' == $options['notify-author'] ) ? '0' : '1';
-					
 					$options['notify-expire'] = ( 'Do not notify on expiration' == $options['notify-expire'] ) ? '0' : '1';
-					
 					$options['show-columns'] = ( 'Do not show expiration in columns' == $options['show-columns'] ) ? '0' : '1';
-					
 					$options['datepicker'] = ( 'Do not use datepicker' == $options['datepicker'] ) ? '0' : '1';
-					
 					$options['remove-cs-data'] = ( 'Do not remove data' == $options['remove-cs-data'] ) ? '0' : '1';
-					
 					// don't forget to do array_replace when we're done?? Or what?
 					// This whole block should perhaps be placed in a function
 				}
-				
+				// We need to update the version string to our current version
+				$options['version'] = "0.9.7";
 				// make sure we have added any updated options
 				if (!function_exists('array_replace'))
 				{
@@ -722,29 +693,41 @@ if ( !class_exists( "ContentScheduler" ) )
 					// go ahead and use php 5.3.0 array_replace
 					$new_options = array_replace( $arr_defaults, $options );
 				}
-				
 				update_option('ContentScheduler_Options', $new_options);
 			}
-
 			// We need to get our expiration event into the wp-cron schedules somehow
 			if( $current_blog_id != '' )
 			{
 				// it is a networked site activation
+				// Test for the event already existing before you schedule the event again
 				// for expirations
-				wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler_'.$current_blog_id );
+				if( !wp_next_scheduled( 'content_scheduler_'.$current_blog_id ) )
+				{
+					wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler_'.$current_blog_id );
+					// wp_schedule_event( time(), 'hourly', 'content_scheduler_'.$current_blog_id );
+				}
 				// for notifications
-				wp_schedule_event( time(), 'daily', 'content_scheduler_notify_'.$current_blog_id );
+				if( !wp_next_scheduled( 'content_scheduler_notify_'.$current_blog_id ) )
+				{
+					wp_schedule_event( time(), 'hourly', 'content_scheduler_notify_'.$current_blog_id );
+				}
 			}
 			else
 			{
 				// it is not a networked site activation, or a single site within a network
 				// for expirations
-				wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler' );
+				if( !wp_next_scheduled( 'content_scheduler' ) )
+				{
+					wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler' );
+					// wp_schedule_event( time(), 'hourly', 'content_scheduler' );
+				}
 				// for notifications
-				wp_schedule_event( time(), 'daily', 'content_scheduler_notify' );
+				if( !wp_next_scheduled( 'content_scheduler_notify' ) )
+				{
+					wp_schedule_event( time(), 'hourly', 'content_scheduler_notify' );
+				}
 			}
 		} // end activate_function
-		
 		// ====================
 		function run_on_deactivate()
 		{
@@ -772,7 +755,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Seems like it is not a multisite install OR it is a single blog of a multisite
 			$this->deactivate_function('');
 		} // end run_on_activate()
-
 		function deactivate_function( $current_blog_id )
 		{
 			if( $current_blog_id != '' )
@@ -791,20 +773,15 @@ if ( !class_exists( "ContentScheduler" ) )
 				wp_clear_scheduled_hook('content_scheduler_notify');
 			}
 		} // end deactivate_function()
-
-
-
-
-
-
-
-
 // ==========================================================================
 // == Validation Function for Options
 // ====================================================
 		// Validates values from the ADMIN ContentScheduler_Options group
 		function validate_settings($input)
 		{
+			global $blog_id;
+			// get current plugin options
+			$options = get_option('ContentScheduler_Options');
 			// We need a value for exp-period
 			if ( empty( $input['exp-period'] ) )
 			{
@@ -818,21 +795,18 @@ if ( !class_exists( "ContentScheduler" ) )
 					// exp-period was not an integer, so let's return an error
 					// First, let's set it to an acceptable value
 					$input['exp-period'] = 1; // 1 minute
-					
 					add_settings_error('ContentScheduler_Options',
 						'settings_updated',
 						__('Only positive integers are accepted for "Expiration period".', 'contentscheduler'),
 						'error');
 				}
 			}
-			
 			// Make sure tags are alphanumeric and that is all
 			// Testing tags-to-add, which should be a comma-delimited list of alphanumerics
 			if ( !empty( $input['tags-to-add'] ) )
 			{
 				$input['tags-to-add'] = filter_var( $input['tags-to-add'], FILTER_SANITIZE_STRING );
 			}
-				
 			// Make sure notify-before is an integer value
 			if ( empty( $input['notify-before'] ) )
 			{
@@ -851,17 +825,45 @@ if ( !class_exists( "ContentScheduler" ) )
 						'error');
 				}
 			}
+			// We need to take inputs from the default expiration time and pack it up into an array.
+			$default_hours = $input['def-hours'];
+			$default_days = $input['def-days'];
+			$default_weeks = $input['def-weeks'];
+			// First, let's assume everything was entered as integers. We'll work this out later before distributing.
+			$default_days = $default_days + floor( $default_hours / 24);
+			$default_hours = $default_hours % 24; // remainder
+			$default_weeks = $default_weeks + floor( $default_days / 7);
+			$default_days = $default_days % 7; // remainder
+			unset( $input['def-hours'] );
+			unset( $input['def-days'] );
+			unset( $input['def-weeks'] );
+			$input['exp-default'] = array( 'def-hours' => $default_hours, 'def-days' => $default_days, 'def-weeks' => $default_weeks );
+			// we need to update wp_schedules for expiration and notification
+			// See if this is a multisite install
+			if ( function_exists( 'is_multisite' ) && is_multisite() )
+			{
+				// it is a networked site activation
+				// Clear out what is there now
+				// for expirations
+				wp_clear_scheduled_hook('content_scheduler_'.$blog_id);
+				wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler_'.$blog_id );
+				// for notifications
+				wp_clear_scheduled_hook('content_scheduler_notify_'.$blog_id);
+				wp_schedule_event( time(), 'hourly', 'content_scheduler_notify_'.$current_blog_id );
+			}
+			else
+			{
+				// it is not a networked site
+				// for expirations
+				wp_clear_scheduled_hook('content_scheduler');
+				wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler' );
+				// for notifications
+				wp_clear_scheduled_hook('content_scheduler_notify');
+				wp_schedule_event( time(), 'hourly', 'content_scheduler_notify' );
+			}
 			// if we had an error, do we still return? Or not?
 			return $input;
 		} // end validate_settings()
-
-
-
-
-
-
-
-
 // =================================================================
 // == Functions for using Custom Controls / Panels
 // == in the Post / Page / Link writing panels
@@ -876,7 +878,6 @@ if ( !class_exists( "ContentScheduler" ) )
 		function ContentScheduler_add_custom_box_fn()
 		{
 			global $current_user;
-		
 			// What is minimum level required to see CS?
 			$options = get_option('ContentScheduler_Options');
 			$min_level = $options['min-level'];
@@ -888,7 +889,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				return; // not authorized to see CS
 			}
 			// else - continue
-			
 			// Add the box to Post write panels
 		    add_meta_box( 'ContentScheduler_sectionid', 
 							__( 'Content Scheduler', 
@@ -921,34 +921,30 @@ if ( !class_exists( "ContentScheduler" ) )
 								$post_type );
 			}
 		} // end myplugin_add_custom_box()
-		
 		// Prints the box content
 		function ContentScheduler_custom_box_fn()
 		{
 			// need $post in global scope so we can get id?
 			global $post;
-
 			// Use nonce for verification
 			wp_nonce_field( plugin_basename(__FILE__), 'ContentScheduler_noncename' );
 			// Get the current value, if there is one
-			$the_data = get_post_meta( $post->ID, 'cs-enable-schedule', true );
+			$the_data = get_post_meta( $post->ID, '_cs-enable-schedule', true );
 			// Checkbox for scheduling this Post / Page, or ignoring
 			$items = array( "Disable", "Enable");
 			foreach( $items as $item)
 			{
 				$checked = ( $the_data == $item ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item' name='cs-enable-schedule' id='cs-enable-schedule' type='radio' /> $item</label>  ";
+				echo "<label><input ".$checked." value='$item' name='_cs-enable-schedule' id='cs-enable-schedule' type='radio' /> $item</label>  ";
 			} // end foreach
 			echo "<br />\n<br />\n";
 			// Field for datetime of expiration
-			$datestring = ( get_post_meta( $post->ID, 'cs-expire-date', true) );
+			$datestring = ( get_post_meta( $post->ID, '_cs-expire-date', true) );
 			// Should we check for format of the date string? (not doing that presently)
 			echo '<label for="cs-expire-date">' . __("Expiration date and hour", 'contentscheduler' ) . '</label><br />';
-			echo '<input type="text" id="cs-expire-date" name="cs-expire-date" value="'.$datestring.'" size="25" />';
+			echo '<input type="text" id="cs-expire-date" name="_cs-expire-date" value="'.$datestring.'" size="25" />';
 			echo ' Input date and time as: Year-Month-Day Hour:00:00 e.g., 2010-11-25 08:00:00<br />';
-
 		} // end ContentScheduler_custom_box_fn()
-		
 		// When the post is saved, saves our custom data
 		function ContentScheduler_save_postdata_fn( $post_id )
 		{
@@ -977,41 +973,75 @@ if ( !class_exists( "ContentScheduler" ) )
 			}
 			// OK, we're authenticated: we need to find and save the data
 			// Checkbox for "enable scheduling"
-			$enabled = $_POST['cs-enable-schedule'];
-			// Value should be either 'Enabled' or 'Disabled'; otherwise something is screwy
+			$enabled = $_POST['_cs-enable-schedule'];
+			// Value should be either 'Enable' or 'Disable'; otherwise something is screwy
 			if( $enabled != 'Enable' AND $enabled != 'Disable' )
 			{
 				// $enabled is something we don't expect
 				// let's make it empty
-				$enabled = 'Disabled';
+				$enabled = 'Disable';
+				// Now we're done with this function?
+				return false;
 			}
 			// Textbox for "expiration date"
-			$date = $_POST['cs-expire-date'];
-			// How can we check a myriad of date formats??
-			// Right now we are mm/dd/yyyy
-			if( ! $this->check_date_format( $date ) )
+			$date = $_POST['_cs-expire-date'];
+			if( strtolower( $date ) == 'default' )
 			{
-				// It was not a valid date format
-				// Normally, we would set to ''
-				$date = '';
-				// For debug, we will set to 'INVALID'
-				$date = 'INVALID';
+				// get the default value from the database
+				$options = get_option('ContentScheduler_Options');
+				$default_expiration_array = $options['exp-default'];
+				if( !empty( $default_expiration_array ) )
+				{
+					$default_hours = $default_expiration_array['def-hours'];
+					$default_days = $default_expiration_array['def-days'];
+					$default_weeks = $default_expiration_array['def-weeks'];
+				}
+				else
+				{
+					$default_hours = '0';
+					$default_days = '0';
+					$default_weeks = '0';
+				}
+				// we need to move weeks into days (7 days per week)
+				$default_days += $default_weeks * 7;
+				// if it is valid, get the published or scheduled datetime, add the default to it, and set it as the $date
+				// post_date
+				$publish_date = $_POST['post_date'];
+				if( $publish_date == '' )
+				{
+					// $publish_date = date( 'Y-m-d H:i:s' ); // right now
+					$publish_date = time(); // right now	
+				}
+				else
+				{
+					$publish_date = strtotime( $publish_date );
+				}
+				// time to add our default
+				// we need $publish_date to be in unix timestamp format, like time()
+				$expiration_date = $publish_date + ( $default_days * 24 * 60 * 60) + ( $default_hours * 60 );
+				$expiration_date = date( 'Y-m-d H:i:s', $expiration_date );
+				// now sub in the calculated date for 'default'
+				$_POST['_cs-expire-date'] = $expiration_date;
+			}
+			else
+			{
+				// How can we check a myriad of date formats??
+				// Right now we are mm/dd/yyyy
+				if( ! $this->check_date_format( $date ) )
+				{
+					// It was not a valid date format
+					// Normally, we would set to ''
+					$date = '';
+					// For debug, we will set to 'INVALID'
+					$date = 'INVALID';
+				}
 			}
 			// We probably need to store the date differently,
 			// and handle timezone situation
-			update_post_meta( $post_id, 'cs-enable-schedule', $enabled );
-			update_post_meta( $post_id, 'cs-expire-date', $date );
-			
+			update_post_meta( $post_id, '_cs-enable-schedule', $enabled );
+			update_post_meta( $post_id, '_cs-expire-date', $date );
 			return true;
 		} // end ContentScheduler_save_postdata()
-
-
-
-
-
-
-
-
 // =======================================================================
 // == SCHEDULING FUNCTIONS
 // =======================================================================
@@ -1039,7 +1069,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			}
 			// We actually have to specify the interval in seconds
 			$period = $period*60;
-			
 			// 2. use that for 'interval' below.
 			$array['contsched_usertime'] = array(
 				'interval' => $period,
@@ -1047,17 +1076,86 @@ if ( !class_exists( "ContentScheduler" ) )
 			);
 			return $array;
 		} // end add_hourly_cron_fn()
-
+	// =======================================================
+	// == Show CRON Settings
+	// == Mostly for debug in Setting screen
+	// =======================================================
+	function cs_view_cron_settings()
+	{
+		// store all scheduled cron jobs in an array
+		$cron = _get_cron_array();
+		// get all registered cron recurrence options (hourly, etc.)
+		$schedules = wp_get_schedules();
+		$date_format = 'M j, Y @ G:i';
+?>
+<div clas="wrap" id="cron-gui">
+<h2>Cron Events Scheduled</h2>
+<table class="widefat fixed">
+	<thead>
+	<tr>
+		<th scope="col">Next Run (GMT/UTC)</th>
+		<th scope="col">Schedule</th>
+		<th scope="col">Hook Name</th>
+	</tr>
+	</thead>
+	<tbody>
+<?php
+		foreach( $cron as $timestamp => $cronhooks )
+		{
+			foreach( (array) $cronhooks as $hook => $events )
+			{
+				foreach( (array) $events as $event )
+				{
+?>
+		<tr>
+			<td>
+				<?php echo date_i18n( $date_format, wp_next_scheduled( $hook ) ); ?>
+			</td>
+			<td>
+				<?php 
+				if( $event['schedule'] )
+				{
+					echo $schedules[$event['schedule']]['display'];
+				}
+				else
+				{
+				?>
+				One-time
+				<?php
+				}
+?>
+			</td>
+			<td><?php echo $hook; ?></td>
+		</tr>
+<?php
+				}
+			}
+		}
+?>
+	</tbody>
+</table>
+<h3>More Debug Info:</h3>
+<p><strong>NOTE: </strong>You will see <em>either</em> a Timezone String <em>or</em> a GMT Offset -- not both.</p>
+<ul>
+	<li>PHP Version on this server: <?php echo phpversion(); ?></li>
+	<li>WordPress core version: <?php bloginfo( 'version' ); ?></li>
+	<li>WordPress Timezone String: <?php echo get_option('timezone_string'); ?></li>
+	<li>WordPress GMT Offset: <?php echo get_option('gmt_offset'); ?></li>
+	<li>WordPress Date Format: <?php echo get_option('date_format'); ?></li>
+	<li>WordPress Time Format: <?php echo get_option('time_format'); ?></li>
+</ul>
+</div>
+<?php
+	} // end cs_view_cron_settings()
 	// =======================================================
 	// == WP-CRON RESPONDERS
 	// =======================================================
 		// ====================
-		// Respond to an hourly call from wp-cron checking for expired Posts / Pages
+		// Respond to a call from wp-cron checking for expired Posts / Pages
 		function answer_expiration_event()
 		{
 			// we should get our options right now, and decide if we need to proceed or not.
 			$options = get_option('ContentScheduler_Options');
-						
 			// Do we need to process expirations?
 			if( $options['exp-status'] != '0' )
 			{				
@@ -1071,7 +1169,6 @@ if ( !class_exists( "ContentScheduler" ) )
 		{
 			// we should get our options right now, and decide if we need to proceed or not.
 			$options = get_option('ContentScheduler_Options');
-
 			// Do we need to process notifications?
 			if( $options['notify-on'] != '0' )
 			{
@@ -1081,7 +1178,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				$this->process_notifications();
 			} // end if
 		} // end answer_notification_event()
-		
 		// ==========================================================
 		// Process Expirations
 		// ==========================================================
@@ -1091,15 +1187,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Hand them off to appropriate functions
 			include 'includes/process-expirations.php';
 		} // end process_expirations()
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		// =============================================================
 		// Process Notifications
 		// =============================================================
@@ -1109,14 +1196,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Hand them off to appropriate functions
 			include 'includes/process-notifications.php';			
 		} // end process_notifications()
-
-
-
-
-
-
-
-
 		// =============================================================
 		// == Perform NOTIFICATIONs
 		// =============================================================
@@ -1129,14 +1208,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			// notify people of expiration or pending expiration
 			include 'includes/send-notifications.php';	
 		} // end do_notifications()
-
-
-
-
-
-
-
-
 // 11/23/2010 11:45:27 AM -pk
 // Somehow, we need to retrieve the OPTIONS only Once, and then act upon them.
 // For now, let's just write some code and see what happens.
@@ -1147,14 +1218,12 @@ if ( !class_exists( "ContentScheduler" ) )
 		{
 			include "includes/process-post.php";
 		} // end process_post()
-		
 		// ====================
 		// Do whatever we need to do to expired PAGES
 		function process_page($postid)
 		{
 			include "includes/process-page.php";
 		} // end process_page()
-		
 		// ====================
 		// Do whatever we need to do to expired CUSTOM POST TYPES
 		function process_custom($postid)
@@ -1162,14 +1231,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			// for now, we are just going to proceed with process_post
 			include "includes/process-post.php";
 		} // end process_custom()
-
-
-
-
-
-
-
-
 		// ================================================================
 		// == Conditionally Add Expiration date to Column views
 		// ================================================================
@@ -1185,7 +1246,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			}
 		  	return $columns;
 		} // end cs_add_expdate_column()
-
 		// fill our column in the table, for each item
 		function cs_show_expdate ($column_name)
 		{
@@ -1198,11 +1258,11 @@ if ( !class_exists( "ContentScheduler" ) )
 				if ($column_name === 'cs-exp-date')
 				{
 					// get the expiration value for this post
-					$query = "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key = \"cs-expire-date\" AND post_id=$id";
+					$query = "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key = \"_cs-expire-date\" AND post_id=$id";
 					// get the single returned value (can do this better?)
 					$ed = $wpdb->get_var($query);
 					// determine whether expiration is enabled or disabled
-					if( get_post_meta( $post->ID, 'cs-enable-schedule', true) != 'Enable' )
+					if( get_post_meta( $post->ID, '_cs-enable-schedule', true) != 'Enable' )
 					{
 						$ed .= "<br />\n";
 						$ed .= __( '(Expiration Disabled)', 'contentscheduler' );
@@ -1211,13 +1271,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			  	} // end if
 		  	} // end if
 		} // end cs_show_expdate()
-
-
-
-
-
-
-
 		// ==================================================================
 		// == SHORTCODES
 		// ==================================================================
@@ -1227,37 +1280,30 @@ if ( !class_exists( "ContentScheduler" ) )
 		// (b) show shortcodes to certain user role and above
 		// (c) do not show shortcodes to anyone
 		// For now, I am just going to add the shortcode handler, with no options (0.9.2)
-		
-		
+		// === TEMPLATE TAG NOTE ===
+		// We'll add a template tag that will also call this function for output.
 // [cs_expiration]
-// We removed the ability to format your timestamp, since the timestamp is just a string
 function handle_shortcode( $attributes )
 {
 	global $post;
 	global $current_user;
-
 	// Check to see if we have rights to see stuff
 	$options = get_option('ContentScheduler_Options');
 	$min_level = $options['min-level'];
-	
 	get_currentuserinfo();
-	
 	$user_level = $current_user->data->user_level;
-	
 	if( $user_level < $min_level )
 	{
 		// we're NOT okay to proceed
 		return "";
 	}
 	// else we can proceed
-
 	// get the expiration timestamp
-    $expirationdt = get_post_meta( $post->ID, 'cs-expire-date', true );
+    $expirationdt = get_post_meta( $post->ID, '_cs-expire-date', true );
 	if ( empty( $expirationdt ) )
 	{
 		return false;
 	}
-
 	// We'll need the following if / when we allow formatting of the timestamp
 	/*
 	// we'll default to formats selected in Settings > General
@@ -1265,16 +1311,13 @@ function handle_shortcode( $attributes )
 		'dateformat' => get_option('date_format'),
 		'timeformat' => get_option('time_format')
 		), $attributes ) );
-
 	// We always show date and time together
 	$format = $dateformat . ' ' . $timeformat;
-
 	return date( "$format", $expirationdt );
 	*/
-	$return_string = printf(__("Expires: %s", 'contentscheduler'), $expirationdt);
+	$return_string = printf( __("Expires: %s", 'contentscheduler'), $expirationdt );
 	return $return_string;
 }
-
 // =======================================================================
 // == GENERAL UTILITY FUNCTIONS
 // =======================================================================
@@ -1285,7 +1328,6 @@ function array_replace( &$array, &$array1 )
 {
   $args = func_get_args();
   $count = func_num_args();
-
   for ($i = 0; $i < $count; ++$i) {
     if (is_array($args[$i])) {
       foreach ($args[$i] as $key => $val) {
@@ -1300,10 +1342,8 @@ function array_replace( &$array, &$array1 )
       return NULL;
     }
   }
-
   return $array;
 }
-
 		// 11/17/2010 3:06:27 PM -pk
 		// NOTE: We could add another parameter, '$format,' to support different date formats
 		function check_date_format($date)
@@ -1340,7 +1380,6 @@ function array_replace( &$array, &$array1 )
 				return false;
 			}
 		}
-		
 		// ================================================================
 		// Detect WordPress Network Install
 		function is_network_site()
@@ -1354,7 +1393,6 @@ function array_replace( &$array, &$array1 )
 				return false;
 			}
 		}
-		
 		// ===============================================================
 		// Logging for development
 		/*
@@ -1371,13 +1409,6 @@ function array_replace( &$array, &$array1 )
 			fclose($fd);
 		}
 		*/
-
-
-
-
-
-
-
 		// ================================================================
 		// handle timezones
 		function setup_timezone() {
@@ -1391,18 +1422,27 @@ function array_replace( &$array, &$array1 )
 		}
 	} // end ContentScheduler Class
 } // End IF Class ContentScheduler
-
-
-
-
-
-
-
-
 // Instantiating the Class
 // 10/27/2010 8:27:59 AM -pk
 // NOTE that instantiating is OUTSIDE of the Class
 if (class_exists("ContentScheduler")) {
 	$pk_ContentScheduler = new ContentScheduler();
+}
+// ========================================================================
+// == TEMPLATE TAG
+// == For displaying the expiration date / time of the current post.
+// == Must be used within the loop
+function cont_sched_show_expiration( $args = '' )
+{
+	// $args should be empty, fyi
+	if( !isset( $pk_ContentScheduler ) )
+	{
+		echo "<!-- Content Scheduler template tag unable to generate output -->\n";
+	}
+	else
+	{
+		$output = $pk_ContentScheduler->handle_shortcode();
+		echo $output;	
+	}
 }
 ?>
