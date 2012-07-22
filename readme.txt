@@ -1,13 +1,13 @@
 === Content Scheduler ===
 Contributors: freakingid 
 Plugin Name: Content Scheduler
-Plugin URI: http://structureweb.co/wordpress-plugins/content-scheduler/
+Plugin URI: http://structurewebdev.com/wordpress-plugins/content-scheduler/
 Tags: expire posts, expire, expiring, scheduling, sticky
 Author URI: http://profiles.wordpress.org/users/freakingid/
 Author: Paul Kaiser (freakingid)
 Requires at least: 2.9
-Tested up to: 3.3
-Stable tag: trunk
+Tested up to: 3.4
+Stable tag: 0.9.8
 
 Schedule content to automatically expire and change at a certain time, and notify people of expiration.
 
