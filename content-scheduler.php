@@ -59,6 +59,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			// adds our plugin options page
 			add_action('admin_menu', array($this, 'ContentScheduler_addoptions_page_fn'));
 			// add a cron action for expiration check and notification check
+			// I think this is still valid, even after 3.4 changes
 			if ( $this->is_network_site() )
 			{
 				add_action ('content_scheduler'.$current_blog->blog_id, array( $this, 'answer_expiration_event') );
@@ -541,33 +542,35 @@ if ( !class_exists( "ContentScheduler" ) )
 		} // end draw_overview_disp()
 // ==========================================================================
 // == Set options to defaults - used during plugin activation
+// ==========================================================================
+// == NOTE that activations do not run since 3.1 upon UPDATES.
+// Talk of an update hook, not sure where that is.
+// When update happens, if we need to change anything in database... how do we trigger that??
 		// define default option settings
 		// ====================
-		function run_on_activate()
+		function run_on_activate( $network_wide )
 		{
 			global $wpdb;
-			// See if this is a multisite install
-			if ( function_exists( 'is_multisite' ) && is_multisite() )
+
+			// See if the plugin is being activated for the entire network of blogs
+			if ( $network_wide )
 			{
-				// See if the plugin is being activated for the entire network of blogs
-				if ( isset( $_GET['networkwide'] ) && ( $_GET['networkwide'] == 1 ) )
+				// Save the current blog id
+				$orig_blog = $wpdb->blogid;
+				// Loop through all existing blogs (by id)
+				$all_blogs = $wpdb->get_col( $wpdb->prepare("SELECT blog_id FROM $wpdb->blogs") );
+				foreach ($all_blogs as $blog_id)
 				{
-					// Save the current blog id
-					$orig_blog = $wpdb->blogid;
-					// Loop through all existing blogs (by id)
-					$all_blogs = $wpdb->get_col( $wpdb->prepare("SELECT blog_id FROM $wpdb->blogs") );
-					foreach ($all_blogs as $blog_id)
-					{
-						switch_to_blog( $blog_id );
-						$this->activate_function( $blog_id );
-					} // end foreach
-					// switch back to the original blog
-					switch_to_blog( $orig_blog );
-					return;
-				} // end if
+					switch_to_blog( $blog_id );
+					$this->activate_function( $blog_id );
+				} // end foreach
+				// switch back to the original blog
+				switch_to_blog( $orig_blog );
+				return;
+			} else {
+				// Seems like it is not a multisite install OR it is a single blog of a multisite
+				$this->activate_function('');
 			} // end if
-			// Seems like it is not a multisite install OR it is a single blog of a multisite
-			$this->activate_function('');
 		} // end run_on_activate()
 		// tied to the run_on_activate function above
 		function activate_function( $current_blog_id = '' )
@@ -740,31 +743,28 @@ if ( !class_exists( "ContentScheduler" ) )
 			}
 		} // end activate_function
 		// ====================
-		function run_on_deactivate()
+		function run_on_deactivate( $network_wide )
 		{
 			global $wpdb;
-			// See if this is a multisite install
-			if ( function_exists( 'is_multisite' ) && is_multisite() )
+			// See if the plugin is being deactivated for the entire network of blogs
+			if ( $network_wide )
 			{
-				// See if the plugin is being activated for the entire network of blogs
-				if ( isset( $_GET['networkwide'] ) && ( $_GET['networkwide'] == 1 ) )
+				// Save the current blog id
+				$orig_blog = $wpdb->blogid;
+				// Loop through all existing blogs (by id)
+				$all_blogs = $wpdb->get_col( $wpdb->prepare("SELECT blog_id FROM $wpdb->blogs") );
+				foreach ($all_blogs as $blog_id)
 				{
-					// Save the current blog id
-					$orig_blog = $wpdb->blogid;
-					// Loop through all existing blogs (by id)
-					$all_blogs = $wpdb->get_col( $wpdb->prepare("SELECT blog_id FROM $wpdb->blogs") );
-					foreach ($all_blogs as $blog_id)
-					{
-						switch_to_blog( $blog_id );
-						$this->deactivate_function( $blog_id );
-					} // end foreach
-					// switch back to the original blog
-					switch_to_blog( $orig_blog );
-					return;
-				} // end if
+					switch_to_blog( $blog_id );
+					$this->deactivate_function( $blog_id );
+				} // end foreach
+				// switch back to the original blog
+				switch_to_blog( $orig_blog );
+				return;
+			} else {
+				// Seems like it is not a multisite install OR it is a single blog of a multisite
+				$this->deactivate_function('');
 			} // end if
-			// Seems like it is not a multisite install OR it is a single blog of a multisite
-			$this->deactivate_function('');
 		} // end run_on_activate()
 		function deactivate_function( $current_blog_id )
 		{
