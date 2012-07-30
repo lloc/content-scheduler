@@ -1,19 +1,19 @@
 === Content Scheduler ===
 Contributors: freakingid 
 Plugin Name: Content Scheduler
-Plugin URI: http://structureweb.co/wordpress-plugins/content-scheduler/
+Plugin URI: http://structurewebdev.com/wordpress-plugins/content-scheduler/
 Tags: expire posts, expire, expiring, scheduling, sticky
 Author URI: http://profiles.wordpress.org/users/freakingid/
 Author: Paul Kaiser (freakingid)
 Requires at least: 2.9
-Tested up to: 3.4
-Stable tag: 0.9.8
+Tested up to: 3.4.1
+Stable tag: 0.9.9
 
 Schedule content to automatically expire and change at a certain time, and notify people of expiration.
 
 == Description ==
 
-Content Scheduler lets you control when Content automatically expires, what to do with that content when it expires, and optionally how to provide notification to site contributors that the content expired.
+Content Scheduler lets you control when content automatically expires, what to do with that content when it expires, and optionally how to provide notification to site contributors when the content expired.
 
 = Expiration Options =
 
@@ -38,8 +38,6 @@ This reminder helps you keep content fresh, providing a reminder that content is
 
 Documentation included with the plugin in PDF format.
 Also see the developer's site, [Structure Web Development:](http://structurewebdev.com/)
-Lively, friendly support forum at [Structure Web Development Plugin Support:](http://structurewebdev.com/support/)
-
 
 == Installation ==
 
@@ -81,6 +79,9 @@ Yes. As of Version 0.9.7, Content Scheduler should work on WordPress Network Sit
 
 == Changelog ==
 
+= 0.9.9 =
+* Changed (de)activation functions to use the $network_wide flag to detect network (de)activation of plugin.
+
 = 0.9.8 =
 * FIX: for WordPress 3.3, properly checking for user level allowed to see Content Scheduler fields, values, and shortcodes.
 * FIX: tag manipulation. NOTE: Tags must be comma-seperated.
@@ -121,3 +122,5 @@ Yes. As of Version 0.9.7, Content Scheduler should work on WordPress Network Sit
 
 = 0.9 =
 * First public release.
+
+== Upgrade Notice ==
