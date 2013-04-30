@@ -58,17 +58,15 @@ if ( !class_exists( "ContentScheduler" ) )
 			add_action( "admin_print_styles-post.php", array($this, 'cs_edit_styles') );
 			// adds our plugin options page
 			add_action('admin_menu', array($this, 'ContentScheduler_addoptions_page_fn'));
-			// add a cron action for expiration check and notification check
+			// add a cron action for expiration check
 			// I think this is still valid, even after 3.4 changes
 			if ( $this->is_network_site() )
 			{
 				add_action ('content_scheduler'.$current_blog->blog_id, array( $this, 'answer_expiration_event') );
-				add_action ('content_scheduler_notify'.$current_blog->blog_id, array( $this, 'answer_notification_event') );
 			}
 			else
 			{
 				add_action ('content_scheduler', array( $this, 'answer_expiration_event') );
-				add_action ('content_scheduler_notify', array( $this, 'answer_notification_event') );
 			}
 			// ==========
 			// Adding Custom boxes (Meta boxes) to Write panels (for Post, Page, and Custom Post Types)
@@ -343,28 +341,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			}
 			echo "</select>\n";
 		} // end draw_min_level_fn()
-		
-		// 8/8/2011 11:51:41 PM -pk
-		// 0.9.7 We are removing this option.
-		/*
-		// Notify upon expiration?
-		function draw_notify_expire_fn()
-		{
-			// get this plugin's options from the database
-			$options = get_option('ContentScheduler_Options');
-			// make array of radio button items
-			$items = array(
-							array('1', __("Notify on expiration", 'contentscheduler'), __("Notify when expiration changes posts / pages.", 'contentscheduler') ),
-							array('0', __("Do not notify on expiration", 'contentscheduler'), __("Do not notify when expiration changes posts / pages.", 'contentscheduler') )
-							);
-			// Step through and spit out each item as radio button
-			foreach( $items as $item )
-			{
-				$checked = ($options['notify-expire'] == $item[0] ) ? ' checked="checked" ' : '';
-				echo "<label><input ".$checked." value='$item[0]' name='ContentScheduler_Options[notify-expire]' type='radio' /> $item[1] &mdash; $item[2]</label><br />";
-			} // end foreach
-		} // draw_notify_expire_fn()
-		*/
 		
 		// Notify number of days before expiration?
 		function draw_notify_before_fn()
@@ -720,11 +696,6 @@ if ( !class_exists( "ContentScheduler" ) )
 					wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler_'.$current_blog_id );
 					// wp_schedule_event( time(), 'hourly', 'content_scheduler_'.$current_blog_id );
 				}
-				// for notifications
-				if( !wp_next_scheduled( 'content_scheduler_notify_'.$current_blog_id ) )
-				{
-					wp_schedule_event( time(), 'hourly', 'content_scheduler_notify_'.$current_blog_id );
-				}
 			}
 			else
 			{
@@ -734,11 +705,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				{
 					wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler' );
 					// wp_schedule_event( time(), 'hourly', 'content_scheduler' );
-				}
-				// for notifications
-				if( !wp_next_scheduled( 'content_scheduler_notify' ) )
-				{
-					wp_schedule_event( time(), 'hourly', 'content_scheduler_notify' );
 				}
 			}
 		} // end activate_function
@@ -860,9 +826,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				// for expirations
 				wp_clear_scheduled_hook('content_scheduler_'.$blog_id);
 				wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler_'.$blog_id );
-				// for notifications
-				wp_clear_scheduled_hook('content_scheduler_notify_'.$blog_id);
-				wp_schedule_event( time(), 'hourly', 'content_scheduler_notify_'.$current_blog_id );
 			}
 			else
 			{
@@ -870,9 +833,6 @@ if ( !class_exists( "ContentScheduler" ) )
 				// for expirations
 				wp_clear_scheduled_hook('content_scheduler');
 				wp_schedule_event( time(), 'contsched_usertime', 'content_scheduler' );
-				// for notifications
-				wp_clear_scheduled_hook('content_scheduler_notify');
-				wp_schedule_event( time(), 'hourly', 'content_scheduler_notify' );
 			}
 			// if we had an error, do we still return? Or not?
 			return $input;
@@ -1212,21 +1172,7 @@ if ( !class_exists( "ContentScheduler" ) )
 				$this->process_expirations();
 			} // end if
 		}
-		// ====================
-		// Respond to a daily call from wp-cron checking for notification needs
-		function answer_notification_event()
-		{
-			// we should get our options right now, and decide if we need to proceed or not.
-			$options = get_option('ContentScheduler_Options');
-			// Do we need to process notifications?
-			if( $options['notify-on'] != '0' )
-			{
-				// We need to process notifications
-				// Note, these are only notifications that occur as a warning
-				// BEFORE expiration
-				$this->process_notifications();
-			} // end if
-		} // end answer_notification_event()
+
 		// ==========================================================
 		// Process Expirations
 		// ==========================================================
@@ -1236,27 +1182,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			// Hand them off to appropriate functions
 			include 'includes/process-expirations.php';
 		} // end process_expirations()
-		// =============================================================
-		// Process Notifications
-		// =============================================================
-		function process_notifications()
-		{
-			// Check database for posts meeting notification-only criteria
-			// Hand them off to appropriate functions
-			include 'includes/process-notifications.php';			
-		} // end process_notifications()
-		// =============================================================
-		// == Perform NOTIFICATIONs
-		// =============================================================
-		// This function takes an array of arrays.
-		// The arrays contain a post_id and an array of user_ids
-		// The function then compiles one email per user and sends it by email.
-		// This method takes one item in the outside array per Post.
-		function do_notifications( $posts_to_notify, $why_notify )
-		{
-			// notify people of expiration or pending expiration
-			include 'includes/send-notifications.php';	
-		} // end do_notifications()
+
 // 11/23/2010 11:45:27 AM -pk
 // Somehow, we need to retrieve the OPTIONS only Once, and then act upon them.
 // For now, let's just write some code and see what happens.
