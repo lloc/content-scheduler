@@ -64,7 +64,7 @@
 				$update_post['post_category'] = $category_switch;
 			} // end if - checking chg-cat-method
 			// =============================================================
-			// TAGS (Check to see if the post type support post_tag first)
+			// TAGS (Check to see if the post type support post_tag first)			
 			$proceed = false;
 			// Get the post type (we're using this same file for Posts and Custom Post Types)
 			$post_type = get_post_type( $postid );
@@ -88,9 +88,9 @@
 						$proceed = true;
 					} // end if for post_tag support
 				} // end if for $post_type != post
+				
 				if( $proceed == true )
 				{
-					// ===========================================================
 					// First, check to see if we even want to do tags
 					$tags_to_add = $options['tags-to-add']; // this is a comma-delimited string
 					if( '' != $tags_to_add ) {
@@ -102,78 +102,60 @@
             $tags_to_add = array();
             $tags_to_remove = array();
             $final_tag_list = array();
-					// process the array by:
-					// a. remove spaces from items
-					// b. checking for "-" or "+" as first character
-					// -- i. Adding to appropriate array if there is such a character
-					foreach( $tags_setting_list as $cur_tag )
-					{
-						// trim any space from front and back
-						$cur_tag = trim( $cur_tag );
-						// we'll do trim() again on the + and - items, since there might be whitespace after the +/-
-						// check to see what the first character of the tag is
-						$first_char = substr( $cur_tag, 0, 1 );
-						switch( $first_char )
-						{
-							case '-':
-								$tags_to_remove[] = trim( substr( $cur_tag, 1 ) );
-								break;
-							case '+':
-							default:
-								$tags_to_add[] = trim( substr( $cur_tag, 1 ) );
-						} // end switch
-					} // end foreach
+            // process the array by:
+            // a. remove spaces from items
+            // b. checking for "-" or "+" as first character
+            // -- i. Adding to appropriate array if there is such a character
+            foreach( $tags_setting_list as $cur_tag )
+            {
+              // trim any space from front and back
+              $cur_tag = trim( $cur_tag );
+              // we'll do trim() again on the + and - items, since there might be whitespace after the +/-
+              // check to see what the first character of the tag is
+              $first_char = substr( $cur_tag, 0, 1 );
+              switch( $first_char )
+              {
+                case '-':
+                  $tags_to_remove[] = trim( substr( $cur_tag, 1 ) );
+                  break;
+                case '+':
+                default:
+                  $tags_to_add[] = trim( substr( $cur_tag, 1 ) );
+              } // end switch
+            } // end foreach
             
 						// get the current tags list for this post
 						$cur_post_tags = get_the_tags( $postid ); // returns an array of objects
 						if( !empty( $cur_post_tags ) )
 						{
 							// Make a new array to keep just the current tag list in
-							/*
 							$new_cur_post_tags = array();
 							foreach( $cur_post_tags as $tag_object )
 							{
 								$new_cur_post_tags[] = $tag_object->name;
 							}
-							*/
 							// Remove tags from current list
 							if( !empty( $tags_to_remove ) ) {
-							  $cur_post_tags = array_diff( $cur_post_tags, $tags_to_remove );
+							  $new_cur_post_tags = array_diff( $new_cur_post_tags, $tags_to_remove );
 							}
 							// Add tags to current list
-/*
-							if ( !empty( $tags_to_remove ) )
-							{
-								// remove any indicated tags
-								$new_cur_post_tags = array_diff( $new_cur_post_tags, $tags_to_remove );
-							}
-*/
               if( !empty( $tags_to_add ) ) {
-                $cur_post_tags = array_merge( $cur_post_tags, $tags_to_add );
+                $new_cur_post_tags = array_merge( $new_cur_post_tags, $tags_to_add );
               }
-/*
-							if ( !empty( $tags_to_add ) )
-							{
-								// add any indicated tags
-								$final_tag_list = array_merge( $new_cur_post_tags, $tags_to_add );
-							}
-*/
+              // now build final tag list. this could be better
+              $final_tag_list = $new_cur_post_tags;
 						}
 						else
 						{
-/*
 							// there were no current tags in the post, so we're just adding
 							$final_tag_list = $tags_to_add;
-*/
-              $cur_post_tags = $tags_to_add;
 						} // end if checking for empty current post tag list
 
-					// now I need all those tags comma delimited again (did we have to go into the array and back out of it to handle the duplicates?)
-					// $final_tag_list = implode( ", ", $final_tag_list );
-					$cur_post_tags = implode( ", ", $cur_post_tags );
-					// add the tag list to our $update_post
-					// $update_post['tags_input'] = $final_tag_list;
-					$update_post['tags_input'] = $cur_post_tags;
+            // now I need all those tags comma delimited again (did we have to go into the array and back out of it to handle the duplicates?)
+            $final_tag_list = implode( ", ", $final_tag_list );
+            // add the tag list to our $update_post
+            $update_post['tags_input'] = $final_tag_list;
+					} // end if for having tags_to_add
 				} // endif for $proceed == true
 			} // end if for post_type existing
 			
