@@ -1,5 +1,30 @@
 <?php
 			$options = get_option('ContentScheduler_Options');
+			// STICKINESS (Pages do not have STICKY ability)
+			// Note: This is stored in the options table, and is not part of post_update
+			// get the array of sticky posts
+			// What do we want to do with stickiness?
+			$sticky_change = $options['chg-sticky'];
+			if( $sticky_change == '1' )
+			{
+				$sticky_posts = get_option('sticky_posts');
+				if( ! empty( $sticky_posts ) )
+				{
+					// Remove $postid from the $sticky_posts[] array
+					foreach( $sticky_posts as $key => $stuck_id )
+					{
+						if( $stuck_id == $postid )
+						{
+							// remove $key from $sticky_posts
+							unset( $sticky_posts[$key] );
+							break;
+						} // end if
+					} // end foreach
+					// Get the new array of stickies back into WP
+					update_option('sticky_posts', $sticky_posts);
+				} // end if
+			} // end if
+
 			// Now, make the array we would pass to wp_update_post
 			// This is a local variable, so each time process_post is called, it will be new
 			$update_post = array('ID' => $postid);
@@ -183,28 +208,4 @@
   	        	update_post_meta( $postid, '_cs-enable-schedule', 'Disable' );
   	        }
   	        // The rest of this stuff is not actually stored in _posts
-			// STICKINESS (Pages do not have STICKY ability)
-			// Note: This is stored in the options table, and is not part of post_update
-			// get the array of sticky posts
-			// What do we want to do with stickiness?
-			$sticky_change = $options['chg-sticky'];
-			if( $sticky_change == '1' )
-			{
-				$sticky_posts = get_option('sticky_posts');
-				if( ! empty( $sticky_posts ) )
-				{
-					// Remove $postid from the $sticky_posts[] array
-					foreach( $sticky_posts as $key => $stuck_id )
-					{
-						if( $stuck_id == $postid )
-						{
-							// remove $key from $sticky_posts
-							unset( $sticky_posts[$key] );
-							break;
-						} // end if
-					} // end foreach
-					// Get the new array of stickies back into WP
-					update_option('sticky_posts', $sticky_posts);
-				} // end if
-			} // end if
 ?>
