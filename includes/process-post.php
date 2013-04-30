@@ -119,8 +119,9 @@
                   $tags_to_remove[] = trim( substr( $cur_tag, 1 ) );
                   break;
                 case '+':
-                default:
                   $tags_to_add[] = trim( substr( $cur_tag, 1 ) );
+                default:
+                  $tags_to_add[] = trim( $cur_tag );
               } // end switch
             } // end foreach
             
@@ -158,7 +159,6 @@
 					} // end if for having tags_to_add
 				} // endif for $proceed == true
 			} // end if for post_type existing
-			
 			
 			
 			
