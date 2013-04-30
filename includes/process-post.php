@@ -92,89 +92,98 @@
 				{
 					// ===========================================================
 					// First, check to see if we even want to do tags
-					// $tags_to_add = $options['tags-to-add']; // this is a comma-delimited string
-					// turn $tags_to_add into an array
-					// $tags_to_add = explode( ", ", $tags_to_add );
-					
-					// get entire list of tags from content scheduler settings
-					$tags_setting_list = explode( ",", $options['tags-to-add'] );
-					// for debug
-					
-					// make sure we just have a comma-separated list of alphanumeric entries
-					$tags_setting_list = filter_var_array( $tags_setting_list, FILTER_SANITIZE_STRING );
-					
-					// init arrays used for final operations
-					$tags_to_add = array();
-					$tags_to_remove = array();
-					$tags_absolute = array();
-					$final_tag_list = array();
+					$tags_to_add = $options['tags-to-add']; // this is a comma-delimited string
+					if( '' != $tags_to_add ) {
+					  // we have some tags to work with
+					  $tags_setting_list = explode( ",", $tags_to_add );
+            // make sure we just have a comma-separated list of alphanumeric entries
+            $tags_setting_list = filter_var_array( $tags_setting_list, FILTER_SANITIZE_STRING );
+            // init arrays used for final operations
+            $tags_to_add = array();
+            $tags_to_remove = array();
+            $final_tag_list = array();
 					// process the array by:
 					// a. remove spaces from items
 					// b. checking for "-" or "+" as first character
 					// -- i. Adding to appropriate array if there is such a character
 					foreach( $tags_setting_list as $cur_tag )
 					{
-						// trim any space
+						// trim any space from front and back
 						$cur_tag = trim( $cur_tag );
 						// we'll do trim() again on the + and - items, since there might be whitespace after the +/-
 						// check to see what the first character of the tag is
 						$first_char = substr( $cur_tag, 0, 1 );
-						
 						switch( $first_char )
 						{
-							case '+':
-								$tags_to_add[] = trim( substr( $cur_tag, 1 ) );
-								break;
 							case '-':
 								$tags_to_remove[] = trim( substr( $cur_tag, 1 ) );
 								break;
+							case '+':
 							default:
-								$tags_absolute[] = $cur_tag;
+								$tags_to_add[] = trim( substr( $cur_tag, 1 ) );
 						} // end switch
 					} // end foreach
-
-					// if $tags_absolute is not empty, then we will set the new tag list to just that array and we are done
-					if( !empty( $tags_absolute ) )
-					{
-						$final_tag_list = $tags_absolute;
-					}
-					else
-					{
+            
 						// get the current tags list for this post
 						$cur_post_tags = get_the_tags( $postid ); // returns an array of objects
 						if( !empty( $cur_post_tags ) )
 						{
 							// Make a new array to keep just the current tag list in
+							/*
 							$new_cur_post_tags = array();
-							// Step through $cur_post_tags objects, getting the 'name' parameter from each
 							foreach( $cur_post_tags as $tag_object )
 							{
 								$new_cur_post_tags[] = $tag_object->name;
 							}
-							// Add and remove tags as indicated
+							*/
+							// Remove tags from current list
+							if( !empty( $tags_to_remove ) ) {
+							  $cur_post_tags = array_diff( $cur_post_tags, $tags_to_remove );
+							}
+							// Add tags to current list
+/*
 							if ( !empty( $tags_to_remove ) )
 							{
 								// remove any indicated tags
 								$new_cur_post_tags = array_diff( $new_cur_post_tags, $tags_to_remove );
 							}
+*/
+              if( !empty( $tags_to_add ) ) {
+                $cur_post_tags = array_merge( $cur_post_tags, $tags_to_add );
+              }
+/*
 							if ( !empty( $tags_to_add ) )
 							{
 								// add any indicated tags
 								$final_tag_list = array_merge( $new_cur_post_tags, $tags_to_add );
 							}
+*/
 						}
 						else
 						{
+/*
 							// there were no current tags in the post, so we're just adding
 							$final_tag_list = $tags_to_add;
-						}
-					} // end if checking for tags_absolute
+*/
+              $cur_post_tags = $tags_to_add;
+						} // end if checking for empty current post tag list
+
 					// now I need all those tags comma delimited again (did we have to go into the array and back out of it to handle the duplicates?)
-					$final_tag_list = implode( ", ", $final_tag_list );
+					// $final_tag_list = implode( ", ", $final_tag_list );
+					$cur_post_tags = implode( ", ", $cur_post_tags );
 					// add the tag list to our $update_post
-					$update_post['tags_input'] = $final_tag_list;
+					// $update_post['tags_input'] = $final_tag_list;
+					$update_post['tags_input'] = $cur_post_tags;
 				} // endif for $proceed == true
 			} // end if for post_type existing
+			
+			
+			
+			
+			
+			
+			
+			
 			// =============================================================
 			// NOW ACTUALLY UPDATE THE POST RECORD
   	        // Use the update array to actually update the post
