@@ -814,6 +814,8 @@ if ( !class_exists( "ContentScheduler" ) )
 			}
 			// Make sure tags are alphanumeric and that is all
 			// Testing tags-to-add, which should be a comma-delimited list of alphanumerics
+			// trim out space from tags string
+			$input['tags-to-add'] = trim( $input['tags-to-add'] );
 			if ( !empty( $input['tags-to-add'] ) )
 			{
 				$input['tags-to-add'] = filter_var( $input['tags-to-add'], FILTER_SANITIZE_STRING );
