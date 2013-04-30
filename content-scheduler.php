@@ -606,8 +606,8 @@ if ( !class_exists( "ContentScheduler" ) )
 			// $expiration_default = serialize( $expiration_default );
 			$arr_defaults = array
 			(
-			    "version" => "0.9.9",
-				"exp-status" => "1",
+			    "version" => "1.0.0",
+				  "exp-status" => "1",
 			    "exp-period" => "1",
 			    "chg-status" => "2",
 			    "chg-sticky" => "0",
@@ -695,7 +695,7 @@ if ( !class_exists( "ContentScheduler" ) )
 					// This whole block should perhaps be placed in a function
 				}
 				// We need to update the version string to our current version
-				$options['version'] = "0.9.8";
+				$options['version'] = "1.0.0";
 				// make sure we have added any updated options
 				if (!function_exists('array_replace'))
 				{
