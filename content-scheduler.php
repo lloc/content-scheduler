@@ -1005,7 +1005,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			// First, let's make sure we'll do date operations in the right timezone for this blog
 			$this->setup_timezone();
 			// Checkbox for "enable scheduling"
-			$enabled = $_POST['_cs-enable-schedule'];
+			$enabled = ( empty( $_POST['_cs-enable-schedule'] ) ? 'Disable' : $_POST['_cs-enable-schedule'] );
 			// Value should be either 'Enable' or 'Disable'; otherwise something is screwy
 			if( $enabled != 'Enable' AND $enabled != 'Disable' )
 			{
@@ -1082,7 +1082,7 @@ if ( !class_exists( "ContentScheduler" ) )
 					// Normally, we would set to ''
 					$date = '';
 					// For debug, we will set to 'INVALID'
-					$date = 'INVALID';
+					// $date = 'INVALID';
 				}
 			}
 			// We probably need to store the date differently,
