@@ -342,16 +342,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			echo "</select>\n";
 		} // end draw_min_level_fn()
 		
-		// Notify number of days before expiration?
-		function draw_notify_before_fn()
-		{
-			// get this plugin's options from the database
-			// This should have a default value of '0'
-			$options = get_option('ContentScheduler_Options');
-			$input_field = "<input id='notify-before' name='ContentScheduler_Options[notify-before]' size='10' type='text' value='{$options['notify-before']}' />";
-			printf( __("Notify %s days before expiration.", 'contentscheduler'), $input_field );
-			echo "<br />\n";
-		} // end draw_notify_before_fn()
 		// Show expiration date in columnar lists?
 		function draw_show_columns_fn()
 		{
@@ -594,7 +584,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			    "notify-admin" => "0",
 			    "notify-author" => "0",
 			    "notify-expire" => "0",
-			    "notify-before" => "0",
 			    "min-level" => "level_1",
 			    "show-columns" => "0",
 			    "datepicker" => "0",
@@ -785,24 +774,6 @@ if ( !class_exists( "ContentScheduler" ) )
 			if ( !empty( $input['tags-to-add'] ) )
 			{
 				$input['tags-to-add'] = filter_var( $input['tags-to-add'], FILTER_SANITIZE_STRING );
-			}
-			// Make sure notify-before is an integer value
-			if ( empty( $input['notify-before'] ) )
-			{
-				$input['notify-before'] = '0';
-				// return $input;
-			}
-			else
-			{
-				// if it's not empty, let's keep moving
-				if ( ! sprintf("%u", $input['notify-before']) == $input['notify-before'])
-				{
-					// register an error, officially
-					add_settings_error('ContentScheduler_Options',
-						'settings_updated',
-						__('Only positive integers are accepted for "Notify before expiration".', 'contentscheduler'),
-						'error');
-				}
 			}
 			// We need to take inputs from the default expiration time and pack it up into an array.
 			$default_hours = $input['def-hours'];
@@ -1206,6 +1177,20 @@ if ( !class_exists( "ContentScheduler" ) )
 			// for now, we are just going to proceed with process_post
 			include "includes/process-post.php";
 		} // end process_custom()
+
+		// =============================================================
+		// == Perform NOTIFICATIONs
+		// =============================================================
+		// This function takes an array of arrays.
+		// The arrays contain a post_id and an array of user_ids
+		// The function then compiles one email per user and sends it by email.
+		// This method takes one item in the outside array per Post.
+		function do_notifications( $posts_to_notify, $why_notify )
+		{
+			// notify people of expiration or pending expiration
+			include 'includes/send-notifications.php';	
+		} // end do_notifications()
+
 		// ================================================================
 		// == Conditionally Add Expiration date to Column views
 		// ================================================================
