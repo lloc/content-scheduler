@@ -62,7 +62,7 @@ if ( !class_exists( "ContentScheduler" ) )
 			// I think this is still valid, even after 3.4 changes
 			if ( $this->is_network_site() )
 			{
-				add_action ('content_scheduler'.$current_blog->blog_id, array( $this, 'answer_expiration_event') );
+				add_action( 'content_scheduler' . get_current_blog_id(), array( $this, 'answer_expiration_event' ) );
 			}
 			else
 			{
